@@ -21,15 +21,20 @@ export function mapBackendDecisionToScenario(decision, customDocImageSrc = null,
     ? "Tourist / Business Visa" 
     : "National Identity Card";
 
-  const fullName = decision.holder_name || passport.full_name || visa.holder_name || idCard.full_name || "UNKNOWN TRAVELER";
-  const docId = decision.document_number || passport.passport_number || visa.visa_number || idCard.id_number || "DOC-000000";
-  const dob = passport.date_of_birth || idCard.date_of_birth || "1990-01-01";
-  const expiry = passport.date_of_expiry || visa.valid_until || idCard.date_of_expiry || "2030-01-01";
-  const nat = decision.nationality || passport.nationality || idCard.nationality || "IND";
+  const isUnverified = (ocr.status === "UNVERIFIED");
+  const fullName = isUnverified 
+    ? "UNVERIFIED TRAVELER" 
+    : (decision.holder_name || passport.full_name || visa.holder_name || idCard.full_name || "UNVERIFIED");
+  const docId = isUnverified
+    ? "UNVERIFIED"
+    : (decision.document_number || passport.passport_number || visa.visa_number || idCard.id_number || "UNVERIFIED");
+  const dob = isUnverified ? "UNKNOWN" : (passport.date_of_birth || idCard.date_of_birth || "UNKNOWN");
+  const expiry = isUnverified ? "UNKNOWN" : (passport.date_of_expiry || visa.valid_until || idCard.date_of_expiry || "UNKNOWN");
+  const nat = isUnverified ? "UNKNOWN" : (decision.nationality || passport.nationality || idCard.nationality || "UNKNOWN");
 
   const rawLines = mrz.raw_lines || [];
-  const mrz1 = rawLines[0] || `P<${nat}${fullName.replace(/ /g, "<")}<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<`.slice(0, 44);
-  const mrz2 = rawLines[1] || `${docId.padEnd(9, "<")}0${nat}9001010M3001010<<<<<<<<<<<<<<00`.slice(0, 44);
+  const mrz1 = rawLines[0] || (isUnverified ? "NO_VALID_MRZ_DETECTED<<<<<<<<<<<<<<<<<<<<<<<" : `P<${nat}${fullName.replace(/ /g, "<")}<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<`.slice(0, 44));
+  const mrz2 = rawLines[1] || (isUnverified ? "UNVERIFIED_DATA_ZONE<<<<<<<<<<<<<<<<<<<<<<00" : `${docId.padEnd(9, "<")}0${nat}9001010M3001010<<<<<<<<<<<<<<00`.slice(0, 44));
 
   const isTampered = Boolean(tamper.is_tampered && (tamper.tamper_risk_score >= 35));
   const isMatch = face ? face.verification_passed : true;
@@ -40,7 +45,17 @@ export function mapBackendDecisionToScenario(decision, customDocImageSrc = null,
   let riskLevel = "LOW RISK";
   let recommendation = "CLEARED / LOW RISK";
 
-  if (decision.status === "REJECTED_HIGH_RISK" || decision.risk_score >= 66) {
+  if (isUnverified) {
+    badge = "UNVERIFIED — MANUAL INSPECTION REQUIRED";
+    badgeColor = "amber";
+    riskLevel = "MANUAL REVIEW";
+    recommendation = "OFFICER MANUAL PHYSICAL INSPECTION REQUIRED";
+  } else if (!isMatch) {
+    badge = "CRITICAL BIOMETRIC MISMATCH — HIGH RISK";
+    badgeColor = "rose";
+    riskLevel = "HIGH RISK";
+    recommendation = "BIOMETRIC MISMATCH: DETENTION & ESCORT FOR FRAUD INVESTIGATION";
+  } else if (decision.status === "REJECTED_HIGH_RISK" || decision.risk_score >= 66) {
     badge = "CRITICAL HIGH RISK — REJECTED";
     badgeColor = "rose";
     riskLevel = "HIGH RISK";
@@ -192,31 +207,37 @@ export function mapBackendDecisionToScenario(decision, customDocImageSrc = null,
     },
     signals,
     biometrics: {
-      faceMatch: isTampered ? 32 : faceMatchPct,
+      faceMatch: faceMatchPct,
       livenessScore: face ? Math.round(face.liveness_score * 100) : 98,
-      status: (!isTampered && isMatch) ? "VERIFIED" : (isTampered ? "INVALIDATED (PHOTO ALTERATION DETECTED)" : "POSSIBLE IDENTITY IMPERSONATION"),
+      status: isMatch ? "VERIFIED" : "POSSIBLE IDENTITY IMPERSONATION",
       landmarksDetected: 68,
       antiSpoofing: face?.is_live_person ? "PASS (Active Liveness Confirmed)" : "FAIL (Potential Presentation Attack)",
-      confidenceText: isTampered 
-        ? "⚠️ BIOMETRIC VERIFICATION REJECTED: Identity document portrait exhibits physical photo modification / seam alteration artifacts. Facial match invalidated."
-        : (face?.details || `Biometric facial comparison completed (${faceMatchPct}% similarity).`)
+      confidenceText: face?.details || `Biometric facial comparison completed (${faceMatchPct}% similarity).`
     },
     identitySearch: {
       status: val.watchlist_hit ? "CRITICAL_ALERT" : "CLEARED",
       matchFound: val.watchlist_hit,
       aliasCount: val.watchlist_hit ? 1 : 0,
-      interpolWatchlist: val.watchlist_hit ? "MATCH FLAG DETECTED" : "CLEARED",
-      sanctionsCheck: val.watchlist_hit ? "CRITICAL" : "CLEARED",
-      notes: val.watchlist_hit ? `Hit reason: ${val.watchlist_reason}` : "No adverse watchlist matches found."
+      interpolWatchlist: val.watchlist_hit ? "MATCH FLAG DETECTED" : "CLEARED (Synthetic Watchlist)",
+      sanctionsCheck: val.watchlist_hit ? "CRITICAL" : "CLEARED (Synthetic Watchlist)",
+      notes: val.watchlist_hit ? `Hit reason: ${val.watchlist_reason}` : "Zero matches in synthetic test registry (Demo Mode)."
+    },
+    auditTrail: {
+      chainStatus: "VALID",
+      algorithm: "SHA-256 Tamper-Evident Chained Digests",
+      blockIndex: decision.audit_block_index || 1,
+      currentHash: decision.audit_hash || "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      timestamp: new Date().toLocaleString(),
+      verifiedBy: "Cryptographic SHA-256 Chain Verification"
     },
     blockchain: {
-      status: (val.is_valid && !isTampered) ? "VERIFIED" : "FAILED",
-      txId: `AUDIT-TX-${decision.screening_id.slice(0, 8).toUpperCase()}`,
-      originalHash: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-      currentHash: isTampered ? "7f83b1657ff1fc53b92dc18148a1d65dfc2d4b1fa3d677284addd200126d9069" : "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      status: "VERIFIED",
+      txId: `AUDIT-REC-#${decision.audit_block_index || 1}`,
+      originalHash: decision.audit_hash ? decision.audit_hash.slice(0, 24) + "..." : "e3b0c44298fc...",
+      currentHash: decision.audit_hash || "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
       timestamp: new Date().toLocaleString(),
-      ledgerBlock: "#8,421,999",
-      nodeSignatures: 12
+      ledgerBlock: `Block #${decision.audit_block_index || 1}`,
+      nodeSignatures: "Cryptographic Hash Chain"
     },
     riskBreakdown,
     riskFactors: [

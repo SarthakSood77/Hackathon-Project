@@ -1,11 +1,30 @@
-import React from "react";
+import React, { useState } from "react";
 import { useScreening } from "../../context/ScreeningContext";
 import { useAuth } from "../../context/AuthContext";
-import { Shield, Sparkles, UserCheck, LayoutDashboard, ScanLine, LogOut, Radio, ChevronRight } from "lucide-react";
+import { 
+  Shield, 
+  Sparkles, 
+  UserCheck, 
+  LayoutDashboard, 
+  ScanLine, 
+  LogOut, 
+  Radio, 
+  ChevronRight,
+  ShieldCheck,
+  Activity,
+  AlertTriangle,
+  BarChart3
+} from "lucide-react";
+import { SystemStatusModal } from "./SystemStatusModal";
 
 export const Masthead = () => {
-  const { activeTab, setActiveTab, startNewScreening, selectedScenarioId, setScenario } = useScreening();
+  const { 
+    activeTab, 
+    setActiveTab, 
+    startNewScreening 
+  } = useScreening();
   const { user, logout } = useAuth();
+  const [isStatusModalOpen, setIsStatusModalOpen] = useState(false);
 
   return (
     <header className="bg-white border-b border-[#d9e1ec] shadow-[0_1px_4px_rgba(11,31,81,0.06)] sticky top-0 z-40">
@@ -34,22 +53,21 @@ export const Masthead = () => {
 
           <div>
             <p className="text-[10.5px] uppercase font-mono tracking-wider text-[#5a6e85] font-semibold">
-              Demo Border Security Authority · Bureau of Immigration (SIH Demo)
+              भारत सरकार · Government of India | गृह मंत्रालय · Ministry of Home Affairs
             </p>
             <div className="flex items-baseline gap-2 flex-wrap">
               <h1 className="font-serif text-xl sm:text-2xl font-bold text-[#0B1F51] tracking-tight">
                 SENTINEL AI
               </h1>
               <span className="bg-[#eef2f8] border border-[#c9d5e7] rounded px-2 py-0.5 text-xs font-mono font-semibold text-[#0B1F51]">
-                Identity & Document Screening Portal (Demo)
+                Bureau of Immigration · Portal Gateway
               </span>
             </div>
           </div>
         </div>
 
-        {/* Right: Quick Actions & Officer Badge */}
-        <div className="flex items-center gap-2.5 flex-wrap">
-          {/* Navigation Links */}
+        {/* Right: Navigation Links & Actions */}
+        <div className="flex items-center gap-2 flex-wrap">
           <div className="hidden lg:flex items-center gap-1 bg-[#f4f7fb] p-1 rounded-lg border border-[#dce4ef] text-xs font-medium">
             <button
               onClick={() => setActiveTab("dashboard")}
@@ -73,52 +91,69 @@ export const Masthead = () => {
             </button>
             <button
               onClick={() => setActiveTab("alerts")}
-              className={`px-3 py-1.5 rounded transition-all ${
+              className={`px-3 py-1.5 rounded transition-all flex items-center gap-1 ${
                 activeTab === "alerts"
                   ? "bg-[#0B1F51] text-white font-semibold shadow-sm"
                   : "text-[#486581] hover:text-[#0B1F51] hover:bg-[#e4ebf5]"
               }`}
             >
-              Alerts
+              <AlertTriangle className="w-3.5 h-3.5" /> Alerts
             </button>
             <button
               onClick={() => setActiveTab("blockchain")}
-              className={`px-3 py-1.5 rounded transition-all ${
-                activeTab === "blockchain"
+              className={`px-3 py-1.5 rounded transition-all flex items-center gap-1 ${
+                activeTab === "blockchain" || activeTab === "audit-trail"
                   ? "bg-[#0B1F51] text-white font-semibold shadow-sm"
                   : "text-[#486581] hover:text-[#0B1F51] hover:bg-[#e4ebf5]"
               }`}
             >
-              Ledger Audit
+              <ShieldCheck className="w-3.5 h-3.5" /> Ledger Audit
             </button>
             <button
               onClick={() => setActiveTab("analytics")}
-              className={`px-3 py-1.5 rounded transition-all ${
+              className={`px-3 py-1.5 rounded transition-all flex items-center gap-1 ${
                 activeTab === "analytics"
                   ? "bg-[#0B1F51] text-white font-semibold shadow-sm"
                   : "text-[#486581] hover:text-[#0B1F51] hover:bg-[#e4ebf5]"
               }`}
             >
-              Analytics
+              <BarChart3 className="w-3.5 h-3.5" /> Analytics
             </button>
           </div>
 
+          {/* System Health Diagnostics Trigger */}
+          <button
+            onClick={() => setIsStatusModalOpen(true)}
+            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-[#eef4fb] hover:bg-[#e2ecf9] text-[#1a56a4] border border-[#c6daf4] text-xs font-semibold font-mono transition-all cursor-pointer"
+            title="View Real-Time Subsystem Health"
+          >
+            <Activity className="w-3.5 h-3.5 animate-pulse text-[#1a56a4]" />
+            <span className="hidden sm:inline">System Status</span>
+          </button>
+
           {/* Officer Tag */}
-          <div className="flex items-center gap-2 bg-[#f0f4f8] border border-[#d9e2ec] px-2.5 py-1.5 rounded-lg text-xs font-mono">
+          <div className="flex items-center gap-1.5 bg-[#f0f4f8] border border-[#d9e2ec] px-2.5 py-1.5 rounded-lg text-xs font-mono">
             <span className="w-2 h-2 rounded-full bg-[#1e7e48] animate-pulse"></span>
-            <span className="font-semibold text-[#102a43]">{user?.officerName || "Officer V. Sharma"}</span>
-            <span className="text-[#627d98] hidden sm:inline">({user?.badgeNumber || "BS-092-DEL"})</span>
+            <span className="font-semibold text-[#102a43]">
+              {user?.officerName ? (user.officerName.split(" ")[1] || user.officerName) : "Officer"}
+            </span>
+            <span className="text-[#627d98] hidden md:inline">
+              ({user?.officerId || "IND-DEL-4092"})
+            </span>
           </div>
 
           <button
             onClick={logout}
-            className="p-1.5 rounded text-[#627d98] hover:text-[#b3261e] hover:bg-[#fdf0ee] border border-transparent hover:border-[#b3261e]/30 transition-all text-xs"
+            className="p-1.5 rounded text-[#627d98] hover:text-[#b3261e] hover:bg-[#fdf0ee] border border-transparent hover:border-[#b3261e]/30 transition-all text-xs cursor-pointer"
             title="Logout of session"
           >
             <LogOut className="w-4 h-4" />
           </button>
         </div>
       </div>
+
+      {/* Real-Time Subsystem Status Diagnostic Modal */}
+      <SystemStatusModal isOpen={isStatusModalOpen} onClose={() => setIsStatusModalOpen(false)} />
     </header>
   );
 };

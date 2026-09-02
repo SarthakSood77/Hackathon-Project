@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, useMemo } from "react";
+import React, { createContext, useContext, useState, useEffect } from "react";
 import { DEMO_SCENARIOS } from "../data/demoScenarios";
 import { INITIAL_SCREENINGS, STATS_SUMMARY } from "../data/mockScreenings";
 import { INITIAL_ALERTS } from "../data/mockAlerts";
@@ -6,12 +6,6 @@ import { api } from "../utils/api";
 import { mapBackendDecisionToScenario } from "../utils/scenarioMapper";
 
 const ScreeningContext = createContext();
-
-function getRiskStatus(score) {
-  if (score < 26) return "VERIFIED";
-  if (score <= 70) return "SUSPICIOUS";
-  return "HIGH RISK";
-}
 
 export const ScreeningProvider = ({ children }) => {
   const [activeTab, setActiveTab] = useState("dashboard");
@@ -24,7 +18,11 @@ export const ScreeningProvider = ({ children }) => {
   const [reportModalOpen, setReportModalOpen] = useState(false);
   const [manualReviewModalOpen, setManualReviewModalOpen] = useState(false);
   const [isProcessingStep, setIsProcessingStep] = useState(false);
+  const [isCameraActive, setIsCameraActive] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
+  
+  const [screeningMode, setScreeningMode] = useState("LIVE"); // "LIVE" | "SIMULATION"
+  const [isStep1Completed, setIsStep1Completed] = useState(false);
   
   // Two-file upload states
   const [uploadedDocFile, setUploadedDocFile] = useState(null);
@@ -96,6 +94,7 @@ export const ScreeningProvider = ({ children }) => {
   };
 
   const startNewScreening = (scenarioId = null) => {
+    setIsStep1Completed(false);
     if (scenarioId && DEMO_SCENARIOS[scenarioId]) {
       setCustomLiveScenario(null);
       setSelectedScenarioId(scenarioId);
@@ -252,8 +251,9 @@ export const ScreeningProvider = ({ children }) => {
     }, 280);
 
     try {
-      // Send to FastAPI /api/v1/screen/full
-      const decision = await api.screenDocumentFull(uploadedDocFile, uploadedSelfieFile);
+      // Send to FastAPI /api/v1/screen/full with explicit simulation flag
+      const isSimulation = (screeningMode === "SIMULATION");
+      const decision = await api.screenDocumentFull(uploadedDocFile, uploadedSelfieFile, "GATE-04-DELHI-T3", "OFFICER-SHARMA", isSimulation);
 
       clearInterval(stageTimer);
       setScreeningProgress(prev => ({ ...prev, currentStageIndex: 6 }));
@@ -279,7 +279,7 @@ export const ScreeningProvider = ({ children }) => {
         officer: "Officer V. Sharma",
         checkpoint: "Delhi Terminal 3 - Gate 04",
         tamperDetected: mappedScenario.ocr.tamperingDetected,
-        hashMatch: mappedScenario.blockchain.status === "VERIFIED"
+        hashMatch: mappedScenario.auditTrail?.chainStatus === "VALID"
       };
 
       setScreenings((prev) => [newRecord, ...prev]);
@@ -292,30 +292,27 @@ export const ScreeningProvider = ({ children }) => {
       }));
 
       setScreeningProgress({ isRunning: false, currentStageIndex: 6, stages: [], error: null });
+      setIsStep1Completed(true);
       setScreeningStep(2);
     } catch (err) {
       clearInterval(stageTimer);
       console.error("Live screening error:", err);
       
-      // If offline or backend issue, fallback to mapped preset scenario matching selectedScenarioId
-      const preset = DEMO_SCENARIOS[selectedScenarioId] || DEMO_SCENARIOS.scenarioA;
-      setCustomLiveScenario({
-        ...preset,
-        isLiveResult: true,
-        screeningId: `SEN-2026-${Math.floor(100000 + Math.random() * 900000)}`,
-        person: {
-          ...preset.person,
-          avatarUrl: docPreviewUrl || preset.person.avatarUrl,
-          liveCameraUrl: selfiePreviewUrl || preset.person.liveCameraUrl
-        }
-      });
-      setBackendError(err.message);
-      setScreeningProgress({ isRunning: false, currentStageIndex: 6, stages: [], error: null });
-      setScreeningStep(2);
+      // NEVER SILENTLY FALL BACK TO MOCK PRESET DATA!
+      // Provide honest error status to user
+      setIsStep1Completed(false);
+      setScreeningProgress({ isRunning: false, currentStageIndex: 0, stages: [], error: err.message });
+      setBackendError(err.message || "FastAPI backend service is currently unreachable.");
+      setUploadError(`AI Screening Engine Offline: ${err.message || "Failed to communicate with screening backend. Please ensure server is active."}`);
+      setScreeningStep(1);
     }
   };
 
   const nextStep = () => {
+    if (screeningStep === 1 && !isStep1Completed) {
+      setUploadError("Step 1 Incomplete: Please upload both identity document and selfie, then click [ START SCREENING ] to execute verification.");
+      return;
+    }
     setIsProcessingStep(true);
     setTimeout(() => {
       setIsProcessingStep(false);
@@ -328,6 +325,14 @@ export const ScreeningProvider = ({ children }) => {
   };
 
   const goToStep = (stepNumber) => {
+    if (stepNumber === 1) {
+      setScreeningStep(1);
+      return;
+    }
+    if (!isStep1Completed) {
+      setUploadError("Access Restricted: Step 1 (Upload & Start AI Screening) must be completed before accessing subsequent verification steps.");
+      return;
+    }
     if (stepNumber >= 1 && stepNumber <= 6) {
       setScreeningStep(stepNumber);
     }
@@ -360,8 +365,7 @@ export const ScreeningProvider = ({ children }) => {
   };
 
   const completeAndRecordScreening = () => {
-    setScreeningStep(1);
-    setCustomLiveScenario(null);
+    // Finalization
   };
 
   return (
@@ -369,12 +373,16 @@ export const ScreeningProvider = ({ children }) => {
       value={{
         activeTab,
         setActiveTab,
+        screeningMode,
+        setScreeningMode,
         selectedScenarioId,
         setScenario,
         currentScenario,
         customLiveScenario,
         screeningStep,
         setScreeningStep,
+        isStep1Completed,
+        setIsStep1Completed,
         startNewScreening,
         uploadedDocFile,
         uploadedSelfieFile,

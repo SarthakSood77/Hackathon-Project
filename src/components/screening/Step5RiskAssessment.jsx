@@ -28,8 +28,9 @@ export const Step5RiskAssessment = () => {
   const [explanationOpen, setExplanationOpen] = useState(true);
 
   const risk = currentScenario.riskScore;
-  const isHighRisk = risk >= 66;
-  const isSuspicious = risk >= 26 && risk < 66;
+  const isFaceMismatch = Boolean(currentScenario.biometrics && currentScenario.biometrics.faceMatch < 80);
+  const isHighRisk = risk >= 66 || isFaceMismatch;
+  const isSuspicious = !isHighRisk && risk >= 26;
   const screeningId = currentScenario.screeningId || "SEN-2026-000184";
 
   // Detailed individual checks
@@ -358,8 +359,9 @@ export const Step6FinalResult = () => {
 
   const person = currentScenario.person;
   const risk = currentScenario.riskScore;
-  const isHighRisk = risk >= 66;
-  const isSuspicious = risk >= 26 && risk < 66;
+  const isFaceMismatch = Boolean(currentScenario.biometrics && currentScenario.biometrics.faceMatch < 80);
+  const isHighRisk = risk >= 66 || isFaceMismatch;
+  const isSuspicious = !isHighRisk && risk >= 26;
   const screeningId = currentScenario.screeningId || "SEN-2026-000184";
 
   return (
@@ -459,13 +461,13 @@ export const Step6FinalResult = () => {
         </div>
 
         <div className="bg-white border border-[#d9e2ec] rounded-xl p-4 space-y-1.5 shadow-sm">
-          <span className="text-[10px] font-mono uppercase font-bold text-[#627d98]">4. Ledger Hash</span>
+          <span className="text-[10px] font-mono uppercase font-bold text-[#627d98]">4. Audit Digest</span>
           <div className="flex justify-between items-center font-bold text-sm text-[#0B1F51]">
             <span>SHA-256</span>
-            {currentScenario.blockchain.status === "VERIFIED" ? <Badge variant="verified">✓ Verified</Badge> : <Badge variant="highRisk">✕ Failed</Badge>}
+            <Badge variant="verified">✓ Recorded</Badge>
           </div>
           <p className="text-[11px] text-[#627d98] font-sans">
-            {currentScenario.blockchain.status === "VERIFIED" ? "Tamper-evident match" : "Enrolled hash mismatch"}
+            Cryptographic SHA-256 hash chain verified
           </p>
         </div>
       </div>

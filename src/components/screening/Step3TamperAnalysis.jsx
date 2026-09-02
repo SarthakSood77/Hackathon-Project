@@ -22,18 +22,57 @@ import { Badge } from "../common/Badge";
 
 export const Step3TamperAnalysis = () => {
   const { currentScenario, docPreviewUrl, nextStep, prevStep } = useScreening();
-  const ocr = currentScenario.ocr;
-  const signals = currentScenario.signals;
-  const isTampered = ocr.tamperingDetected;
-  const person = currentScenario.person;
+  const ocr = currentScenario.ocr || {};
+  const signals = currentScenario.signals || [];
+  const isTampered = Boolean(ocr.tamperingDetected);
+  const person = currentScenario.person || {};
+
+  // Specific regional anomaly checks derived from actual signals
+  const isDobAnomaly = Boolean(
+    signals.some(s => (s.name.includes("DOB") || s.name.includes("Birth")) && s.status === "FAILED") ||
+    ocr.tamperingDetails?.toLowerCase().includes("date of birth") ||
+    ocr.tamperingDetails?.toLowerCase().includes("dob")
+  );
+  const isPhotoAnomaly = Boolean(
+    signals.some(s => s.name.includes("Photo") && s.status !== "PASS") ||
+    ocr.tamperingDetails?.toLowerCase().includes("photo")
+  );
+  const isMrzAnomaly = Boolean(
+    signals.some(s => s.name.includes("MRZ") && s.status === "FAILED")
+  );
 
   // ELA / Tampering Anomaly region indicators
   const detectedRegions = [
-    { region: "Photo Region", level: "LOW", status: "NORMAL", color: "text-[#1e7e48] bg-[#eef7f2]" },
-    { region: "Date of Birth", level: isTampered ? "HIGH" : "LOW", status: isTampered ? "ANOMALY DETECTED" : "NORMAL", color: isTampered ? "text-[#b3261e] bg-[#fdf0ee]" : "text-[#1e7e48] bg-[#eef7f2]" },
-    { region: "MRZ Zone", level: "NORMAL", status: "NORMAL", color: "text-[#1e7e48] bg-[#eef7f2]" },
-    { region: "Signature / Seals", level: "NORMAL", status: "NORMAL", color: "text-[#1e7e48] bg-[#eef7f2]" },
-    { region: "Background Substrate", level: isTampered ? "MEDIUM" : "NORMAL", status: isTampered ? "NOISE DISCONTINUITY" : "NORMAL", color: isTampered ? "text-[#b4690e] bg-[#fdf8eb]" : "text-[#1e7e48] bg-[#eef7f2]" }
+    {
+      region: "Photo Region",
+      level: isPhotoAnomaly ? "HIGH" : "LOW",
+      status: isPhotoAnomaly ? "POTENTIAL SEAM DETECTED" : "NORMAL",
+      color: isPhotoAnomaly ? "text-[#b3261e] bg-[#fdf0ee]" : "text-[#1e7e48] bg-[#eef7f2]"
+    },
+    {
+      region: "Date of Birth",
+      level: isDobAnomaly ? "HIGH" : "LOW",
+      status: isDobAnomaly ? "ANOMALY DETECTED" : "NORMAL",
+      color: isDobAnomaly ? "text-[#b3261e] bg-[#fdf0ee]" : "text-[#1e7e48] bg-[#eef7f2]"
+    },
+    {
+      region: "MRZ Zone",
+      level: isMrzAnomaly ? "HIGH" : "NORMAL",
+      status: isMrzAnomaly ? "CHECKSUM MISMATCH" : "NORMAL",
+      color: isMrzAnomaly ? "text-[#b3261e] bg-[#fdf0ee]" : "text-[#1e7e48] bg-[#eef7f2]"
+    },
+    {
+      region: "Signature / Seals",
+      level: "NORMAL",
+      status: "NORMAL",
+      color: "text-[#1e7e48] bg-[#eef7f2]"
+    },
+    {
+      region: "Background Substrate",
+      level: isTampered && !isDobAnomaly && !isPhotoAnomaly ? "MEDIUM" : "NORMAL",
+      status: isTampered && !isDobAnomaly && !isPhotoAnomaly ? "NOISE DISCONTINUITY" : "NORMAL",
+      color: isTampered && !isDobAnomaly && !isPhotoAnomaly ? "text-[#b4690e] bg-[#fdf8eb]" : "text-[#1e7e48] bg-[#eef7f2]"
+    }
   ];
 
   return (
@@ -51,7 +90,7 @@ export const Step3TamperAnalysis = () => {
         <div>
           {isTampered ? (
             <Badge variant="highRisk" size="lg">
-              ⚠️ TAMPERING DETECTED
+              ⚠️ POTENTIAL MANIPULATION DETECTED
             </Badge>
           ) : (
             <Badge variant="verified" size="lg">
@@ -117,14 +156,14 @@ export const Step3TamperAnalysis = () => {
                       {isTampered ? "HIGH-FREQUENCY RECOMPRESSION ANOMALIES" : "UNIFORM COMPRESSION RESIDUALS"}
                     </p>
                     <p className="text-xs text-slate-400 font-mono">
-                      {isTampered ? "Localized pixel modification detected in Date of Birth zone." : "No spatial or metadata splicing artifacts."}
+                      {isTampered ? (ocr.tamperingDetails || "Potential localized pixel modification detected.") : "No spatial or metadata splicing artifacts."}
                     </p>
                   </div>
                 </div>
               )}
             </div>
             <div className="text-[11px] font-mono text-[#627d98] flex justify-between">
-              <span>TAMPER RISK: {isTampered ? "HIGH (65/100)" : "LOW (<10/100)"}</span>
+              <span>TAMPER RISK: {isTampered ? `ELEVATED (${Math.round(currentScenario.riskScore || 65)}/100)` : "LOW (<10/100)"}</span>
               <span>NOISE: LAPLACIAN 84.2</span>
             </div>
           </div>
@@ -192,8 +231,8 @@ export const Step4FaceVerification = () => {
   const [isCapturing, setIsCapturing] = useState(false);
   const person = currentScenario.person;
   const bio = currentScenario.biometrics;
-  const isTampered = Boolean(currentScenario.ocr?.tamperingDetected || currentScenario.riskBreakdown?.some(r => r.name.includes("Tamper") && r.value > 10) || currentScenario.riskScore >= 40);
-  const isMatch = bio.faceMatch >= 80 && !isTampered;
+  const isTampered = Boolean(currentScenario.ocr?.tamperingDetected || currentScenario.tamperingResult?.is_tampered);
+  const isMatch = (bio.faceMatch >= 80) || (bio.status === "VERIFIED");
 
   const handleCapture = () => {
     setIsCapturing(true);
@@ -221,7 +260,7 @@ export const Step4FaceVerification = () => {
             </Badge>
           ) : (
             <Badge variant="highRisk" size="lg">
-              ✕ {isTampered ? "PHOTO MODIFIED / INVALIDATED" : `BIOMETRIC MISMATCH (${bio.faceMatch}%)`}
+              ✕ BIOMETRIC MISMATCH ({bio.faceMatch}%)
             </Badge>
           )}
         </div>
@@ -315,18 +354,16 @@ export const Step4FaceVerification = () => {
             <h3 className={`font-serif text-xl font-bold ${isMatch ? "text-[#1e7e48]" : "text-[#b3261e]"}`}>
               {isMatch 
                 ? "✓ FACE MATCH CONFIRMED" 
-                : (isTampered 
-                  ? "✕ BIOMETRIC VERIFICATION INVALIDATED: DOCUMENT PHOTO MODIFIED" 
-                  : "✕ BIOMETRIC FACE MISMATCH")}
+                : "✕ BIOMETRIC FACE MISMATCH"}
             </h3>
             <p className="text-xs text-[#486581] font-sans mt-0.5">
-              Similarity: <strong>{isMatch ? bio.faceMatch : Math.min(32, bio.faceMatch)}%</strong> (Passing threshold: 80.0%)
+              Similarity: <strong>{bio.faceMatch}%</strong> (Passing threshold: 80.0%)
             </p>
           </div>
 
           <div className="text-right">
             <span className={`text-2xl font-serif font-bold ${isMatch ? "text-[#1e7e48]" : "text-[#b3261e]"}`}>
-              {isMatch ? bio.faceMatch : Math.min(32, bio.faceMatch)}%
+              {bio.faceMatch}%
             </span>
             <span className="text-[10px] font-mono text-[#627d98] block">CONFIDENCE SCORE</span>
           </div>
@@ -339,7 +376,7 @@ export const Step4FaceVerification = () => {
               className={`h-full rounded-full transition-all duration-500 ${
                 isMatch ? "bg-[#1e7e48]" : "bg-[#b3261e]"
               }`}
-              style={{ width: `${isMatch ? bio.faceMatch : Math.min(32, bio.faceMatch)}%` }}
+              style={{ width: `${bio.faceMatch}%` }}
             ></div>
           </div>
           <div className="flex justify-between text-[10px] font-mono text-[#627d98]">

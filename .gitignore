@@ -32,3 +32,8 @@ static/ela_reports/
 # Logs
 *.log
 npm-debug.log*
+
+backend/uploads/
+backend/static/ela_reports/
+backend/.venv/
+.venv/

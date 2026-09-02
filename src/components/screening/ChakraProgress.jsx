@@ -1,8 +1,9 @@
 import React from "react";
 import { useScreening } from "../../context/ScreeningContext";
+import { Lock } from "lucide-react";
 
 export const ChakraProgress = () => {
-  const { screeningStep, goToStep } = useScreening();
+  const { screeningStep, goToStep, isStep1Completed } = useScreening();
 
   const steps = [
     { num: 1, label: "01 Document upload" },
@@ -72,20 +73,32 @@ export const ChakraProgress = () => {
         {steps.map((s) => {
           const isCurrent = screeningStep === s.num;
           const isDone = screeningStep > s.num;
+          const isLocked = !isStep1Completed && s.num > 1;
 
           return (
             <button
               key={s.num}
-              onClick={() => goToStep(s.num)}
+              type="button"
+              disabled={isLocked}
+              onClick={() => !isLocked && goToStep(s.num)}
+              title={isLocked ? "Complete Step 1 (Upload & Screening) to unlock" : s.label}
               className={`px-2.5 py-1.5 rounded-md text-xs font-mono transition-all flex items-center gap-1.5 ${
                 isCurrent
                   ? "bg-[#0B1F51] text-white font-bold shadow-sm"
                   : isDone
-                  ? "bg-[#eef7f2] border border-[#1e7e48]/30 text-[#1e7e48] font-semibold"
-                  : "bg-[#f4f7fb] border border-[#d9e2ec] text-[#627d98] hover:text-[#102a43]"
+                  ? "bg-[#eef7f2] border border-[#1e7e48]/30 text-[#1e7e48] font-semibold cursor-pointer"
+                  : isLocked
+                  ? "bg-[#f4f7fb] border border-[#d9e2ec] text-[#9fb3c8] cursor-not-allowed opacity-60"
+                  : "bg-[#f4f7fb] border border-[#d9e2ec] text-[#627d98] hover:text-[#102a43] cursor-pointer"
               }`}
             >
-              <span>{isDone ? "✓" : s.num}</span>
+              {isDone ? (
+                <span>✓</span>
+              ) : isLocked ? (
+                <Lock className="w-3 h-3 text-[#9fb3c8]" />
+              ) : (
+                <span>{s.num}</span>
+              )}
               <span className="hidden sm:inline">{s.label.substring(3)}</span>
             </button>
           );

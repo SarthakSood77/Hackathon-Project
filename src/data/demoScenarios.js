@@ -1,4 +1,97 @@
 export const DEMO_SCENARIOS = {
+  scenarioRohan: {
+    id: "scenarioRohan",
+    key: "rohan",
+    name: "Enrolled Citizen — Rohan Arjun Verma",
+    tagline: "Republic of India Official Biometric Passport",
+    badge: "LOW RISK — VERIFIED",
+    badgeColor: "emerald",
+    riskScore: 8,
+    riskLevel: "LOW RISK",
+    recommendation: "CLEARED / LOW RISK",
+    demoDocPath: "/demo-data/rohan_passport.jpg",
+    demoSelfiePath: "/demo-data/rohan_selfie.jpg",
+    person: {
+      name: "Rohan Arjun Verma",
+      dob: "15/05/1998",
+      nationality: "IND (Republic of India)",
+      gender: "Male",
+      docId: "U1234567",
+      docType: "Republic of India Passport",
+      issueDate: "20/01/2024",
+      expiryDate: "19/01/2034",
+      issuingAuthority: "Regional Passport Office, Lucknow",
+      mrzLine1: "P<INDVERMA<<ROHAN<ARJUN<<<<<<<<<<<<<<<<<<<<<<",
+      mrzLine2: "U1234567<7IND9805157M3401194<<<<<<<<<<<<<<<08",
+      avatarUrl: "/demo-data/rohan_passport.jpg",
+      liveCameraUrl: "/demo-data/rohan_selfie.jpg",
+    },
+    ocr: {
+      confidence: 99.5,
+      qualityScore: 98,
+      securityFeaturesDetected: 10,
+      totalSecurityFeatures: 10,
+      tamperingDetected: false,
+      tamperingDetails: "Government emblem, Ashok Stambh, and microprint security elements verified.",
+    },
+    signals: [
+      { name: "Document Authenticity", status: "PASS", detail: "Republic of India official biometric passport template verified" },
+      { name: "OCR Extraction", status: "PASS", detail: "Confidence 99.5% across Visual Inspection Zone (VIZ)" },
+      { name: "ICAO 9303 MRZ Checksums", status: "PASS", detail: "Modulo-10 check digits verified against Enrolled Citizen Registry" },
+      { name: "Document Expiry Period", status: "PASS", detail: "Document active and valid through 19/01/2034" },
+      { name: "Error Level Analysis (ELA)", status: "PASS", detail: "Uniform recompression gradient across portrait and data zones" },
+      { name: "Face Biometric Verification", status: "PASS", detail: "Biometric concordance 95.4% (passing threshold: 80.0%)" },
+      { name: "Central Watchlist Probe", status: "PASS", detail: "Zero adverse records or stolen document alerts found" }
+    ],
+    biometrics: {
+      faceMatch: 95,
+      livenessScore: 99,
+      status: "VERIFIED",
+      landmarksDetected: 68,
+      antiSpoofing: "PASS (Natural 3D Depth & Presentation Check)",
+      confidenceText: "High biometric concordance between passport photograph and live selfie (95.4% match)."
+    },
+    identitySearch: {
+      status: "CLEARED",
+      matchFound: false,
+      aliasCount: 0,
+      interpolWatchlist: "CLEARED",
+      sanctionsCheck: "CLEARED",
+      notes: "Enrolled in Government Citizen Registry. Zero adverse records."
+    },
+    blockchain: {
+      status: "VERIFIED",
+      txId: "AUDIT-REC-IND-U1234567",
+      originalHash: "3b18c51592a66634a9febd1eb713c4c1f13e7787c7fef07eb147c6c2752dc589",
+      currentHash: "3b18c51592a66634a9febd1eb713c4c1f13e7787c7fef07eb147c6c2752dc589",
+      timestamp: new Date().toLocaleString(),
+      ledgerBlock: "Block #104",
+      nodeSignatures: "Cryptographic SHA-256 Chain"
+    },
+    riskBreakdown: [
+      { name: "MRZ Integrity", value: 0 },
+      { name: "Document Tampering", value: 4 },
+      { name: "Face Verification", value: 0 },
+      { name: "Document Validity", value: 0 },
+      { name: "Watchlist Registry", value: 0 }
+    ],
+    riskFactors: [
+      { label: "Document Tampering", value: 4, max: 35, status: "ok" },
+      { label: "Face Mismatch", value: 0, max: 25, status: "ok" },
+      { label: "Identity & Watchlist", value: 0, max: 15, status: "ok" },
+      { label: "MRZ / Rule Integrity", value: 0, max: 25, status: "ok" }
+    ],
+    aiExplanationPoints: [
+      "✓ Enrolled citizen record verified in Government Citizen Registry (Rohan Arjun Verma)",
+      "✓ MRZ checksums and document number U1234567 validated",
+      "✓ Document valid through 19/01/2034 (10-year validity)",
+      "✓ Facial biometric concordance is 95.4% (passing threshold: 80.0%)",
+      "✓ Error Level Analysis confirms uniform compression gradient without photo splicing",
+      "✓ Zero adverse records or stolen document alerts found"
+    ],
+    aiSummary: "Genuine Republic of India biometric passport issued to Rohan Arjun Verma. All security features, biometric landmarks, and registry cross-checks fully verified. Automated e-Gate clearance authorized.",
+    recommendedAction: "CLEARED / LOW RISK"
+  },
   scenarioA: {
     id: "scenarioA",
     key: "genuine",

@@ -43,6 +43,7 @@ export default function App() {
       case "history":
         return <HistoryView />;
       case "blockchain":
+      case "audit-trail":
         return <BlockchainAuditView />;
       case "analytics":
         return <AnalyticsView />;

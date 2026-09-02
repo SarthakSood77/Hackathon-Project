@@ -7,7 +7,14 @@ import { Step5RiskAssessment, Step6FinalResult } from "../components/screening/S
 import { Shield, Search, ShieldAlert, ArrowRight, CheckCircle2 } from "lucide-react";
 
 export const NewScreeningView = () => {
-  const { screeningStep } = useScreening();
+  const { screeningStep, setScreeningStep, isStep1Completed } = useScreening();
+
+  // Enforce workflow: Steps 2-6 cannot be accessed until Step 1 upload & screening has executed
+  React.useEffect(() => {
+    if (!isStep1Completed && screeningStep > 1) {
+      setScreeningStep(1);
+    }
+  }, [isStep1Completed, screeningStep, setScreeningStep]);
 
   return (
     <div className="space-y-6">
@@ -17,11 +24,11 @@ export const NewScreeningView = () => {
       {/* Main Step Card Container */}
       <div className="bg-white border border-[#d9e2ec] rounded-2xl p-6 sm:p-8 shadow-[0_4px_16px_rgba(11,31,81,0.06)]">
         {screeningStep === 1 && <Step1Upload />}
-        {screeningStep === 2 && <Step2OCR />}
-        {screeningStep === 3 && <Step3TamperAnalysis />}
-        {screeningStep === 4 && <Step4FaceVerification />}
-        {screeningStep === 5 && <Step5RiskAssessment />}
-        {screeningStep === 6 && <Step6FinalResult />}
+        {isStep1Completed && screeningStep === 2 && <Step2OCR />}
+        {isStep1Completed && screeningStep === 3 && <Step3TamperAnalysis />}
+        {isStep1Completed && screeningStep === 4 && <Step4FaceVerification />}
+        {isStep1Completed && screeningStep === 5 && <Step5RiskAssessment />}
+        {isStep1Completed && screeningStep === 6 && <Step6FinalResult />}
       </div>
     </div>
   );
