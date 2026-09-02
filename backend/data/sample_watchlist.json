@@ -1,0 +1,29 @@
+[
+  {
+    "document_number": "P99887766",
+    "full_name": "CARLOS MENDEZ",
+    "nationality": "MEX",
+    "reason": "INTERPOL_RED_NOTICE",
+    "flag_level": "CRITICAL",
+    "issuing_authority": "INTERPOL",
+    "notes": "Wanted for international financial fraud and syndicate identity theft."
+  },
+  {
+    "document_number": "B77665544",
+    "full_name": "VIKTOR SOKOLOV",
+    "nationality": "RUS",
+    "reason": "IMMIGRATION_BAN",
+    "flag_level": "HIGH",
+    "issuing_authority": "BORDER_SECURITY_COMMAND",
+    "notes": "Active deportation order and 10-year border entry prohibition."
+  },
+  {
+    "document_number": "T11223344",
+    "full_name": "JOHN DOE",
+    "nationality": "USA",
+    "reason": "FRAUD_HISTORY",
+    "flag_level": "MEDIUM",
+    "issuing_authority": "CUSTOMS_AUTHORITY",
+    "notes": "Flagged for multiple previous visa overstay infractions."
+  }
+]

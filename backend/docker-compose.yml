@@ -1,0 +1,43 @@
+services:
+  api:
+    build: .
+    container_name: border_guard_api
+    ports:
+      - "8000:8000"
+    environment:
+      - MONGODB_URL=mongodb://mongodb:27017
+      - MONGODB_DB_NAME=border_guard_db
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - SECRET_KEY=${SECRET_KEY:-change-this-to-a-secure-random-key-in-production}
+      - DEBUG=false
+      - ALLOWED_ORIGINS=["http://localhost:5173","http://localhost:3000"]
+    volumes:
+      - ./uploads:/app/uploads
+      - ./static:/app/static
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  mongodb:
+    image: mongo:7.0
+    container_name: border_guard_mongodb
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=borderguard
+      - MONGO_INITDB_ROOT_PASSWORD=borderguard_secure_password
+    volumes:
+      - mongodb_data:/data/db
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  mongodb_data:

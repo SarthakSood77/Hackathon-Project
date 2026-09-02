@@ -1,0 +1,15 @@
+uploads/
+static/ela_reports/
+.pytest_cache/
+__pycache__/
+*.pyc
+.env
+.env.local
+.git/
+.gitignore
+tests/
+data/
+*.md
+docker-compose.yml
+Dockerfile
+.dockerignore

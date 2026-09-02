@@ -1,0 +1,50 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    background-color: #f6f8fb;
+    color: #102a43;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  }
+  h1, h2, h3, .font-serif {
+    font-family: 'PT Serif', Georgia, serif;
+  }
+}
+
+/* Custom Govt Scrollbar */
+::-webkit-scrollbar {
+  width: 7px;
+  height: 7px;
+}
+::-webkit-scrollbar-track {
+  background: #f0f4f8;
+}
+::-webkit-scrollbar-thumb {
+  background: #bcccdc;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #829ab1;
+}
+
+/* Chakra Progress Animation */
+@keyframes spinSlow {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+.animate-chakra-spin {
+  animation: spinSlow 24s linear infinite;
+}
+
+/* Print styling */
+@media print {
+  body {
+    background: #ffffff !important;
+    color: #000000 !important;
+  }
+  .no-print {
+    display: none !important;
+  }
+}
