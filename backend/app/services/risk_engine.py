@@ -54,8 +54,10 @@ class RiskEngine:
         # --- Component 2: Tampering & Digital Forensics (Weight: 35%) ---
         tamper_risk = tampering_result.tamper_risk_score
         if tampering_result.is_tampered:
+            tamper_risk = max(75.0, tamper_risk)
             for anomaly in tampering_result.detected_anomalies:
-                risk_factors.append(anomaly)
+                if anomaly not in risk_factors:
+                    risk_factors.append(anomaly)
                 
         w_tamper = settings.WEIGHT_TAMPERING_ELA
         risk_components.append(RiskComponentScore(
@@ -70,7 +72,14 @@ class RiskEngine:
         w_face = settings.WEIGHT_FACE_MATCH
         
         if face_result:
-            if not face_result.verification_passed:
+            if tampering_result.is_tampered:
+                # If document is tampered or photo is modified, biometric credential cannot be certified
+                face_result.verification_passed = False
+                face_result.match_status = "PHOTO_TAMPERING_DETECTED"
+                face_result.details = f"Biometric Verification Invalidated: Document photo and identity data compromised by forensic tampering (Tamper Score: {tampering_result.tamper_risk_score}/100)."
+                face_risk = 85.0
+                risk_factors.append("Biometric Invalidation: Facial match cannot be cleared on an altered/tampered document.")
+            elif not face_result.verification_passed:
                 face_risk = 90.0
                 risk_factors.append(f"Facial Biometric Mismatch: Live passenger does not match ID photo ({face_result.similarity_score * 100:.1f}% match).")
             elif face_result.match_status == "PROBABLE_MATCH":
@@ -103,8 +112,8 @@ class RiskEngine:
             risk_factors.append(f"Document expires within 6 months ({validation_result.days_until_expiry} days remaining).")
             
         if not validation_result.dob_valid:
-            date_risk = max(date_risk, 60.0)
-            risk_factors.append("Date of Birth logic failure (anomalous age calculated).")
+            date_risk = max(date_risk, 80.0)
+            risk_factors.append("Date of Birth logic failure (anomalous age calculated or registry mismatch).")
             
         w_date = settings.WEIGHT_EXPIRY_DATE
         risk_components.append(RiskComponentScore(
@@ -117,6 +126,18 @@ class RiskEngine:
         # --- Composite Risk Calculation ---
         composite_score = sum(c.weighted_contribution for c in risk_components)
         
+        # --- Tampering / Forgery Critical Elevation ---
+        if tampering_result.is_tampered:
+            composite_score = max(composite_score, 78.0)
+            if not validation_result.mrz_checksum_passed or not validation_result.dob_valid:
+                composite_score = max(composite_score, 82.0)
+            if "CRITICAL FORENSIC ALERT: Unauthorized document tampering or date alteration detected." not in risk_factors:
+                risk_factors.insert(0, "CRITICAL FORENSIC ALERT: Unauthorized document tampering or date alteration detected.")
+
+        # --- Biometric Mismatch / Impostor Critical Elevation ---
+        if face_result and not face_result.verification_passed:
+            composite_score = max(composite_score, 78.0)
+
         # --- Watchlist Override ---
         if validation_result.watchlist_hit:
             composite_score = 100.0
@@ -125,11 +146,11 @@ class RiskEngine:
         final_risk = min(100.0, max(0.0, round(composite_score, 1)))
         
         # --- Decision Assignment ---
-        if final_risk <= settings.LOW_RISK_THRESHOLD and not validation_result.is_expired and not validation_result.watchlist_hit:
+        if final_risk <= settings.LOW_RISK_THRESHOLD and not validation_result.is_expired and not validation_result.watchlist_hit and not tampering_result.is_tampered:
             status = ScreeningStatus.CLEARED
             risk_level = RiskLevel.LOW
             action = "Primary Automated Clearance Granted: Passenger cleared to proceed through e-Gates."
-        elif final_risk <= settings.HIGH_RISK_THRESHOLD:
+        elif final_risk <= settings.HIGH_RISK_THRESHOLD and not tampering_result.is_tampered:
             status = ScreeningStatus.MANUAL_REVIEW
             risk_level = RiskLevel.MEDIUM
             action = "Secondary Inspection Required: Officer must physically inspect passport laminate, verify stamps, and conduct verbal interview."

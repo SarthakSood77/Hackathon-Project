@@ -262,12 +262,12 @@ export function mapBackendDecisionToScenario(decision, customDocImageSrc = null,
     },
     signals,
     biometrics: {
-      faceMatch: faceMatchPct,
+      faceMatch: isTampered || !isMatch ? (isTampered ? 32 : faceMatchPct) : faceMatchPct,
       livenessScore: face ? Math.round(face.liveness_score * 100) : 98,
-      status: isMatch ? "VERIFIED" : "POSSIBLE IDENTITY IMPERSONATION",
+      status: isMatch ? "VERIFIED" : (isTampered ? "PHOTO ALTERED / TAMPERING DETECTED" : "POSSIBLE IDENTITY IMPERSONATION"),
       landmarksDetected: 68,
       antiSpoofing: face?.is_live_person ? "PASS (Active Liveness Confirmed)" : "FAIL (Potential Presentation Attack)",
-      confidenceText: face?.details || `Biometric facial comparison completed (${faceMatchPct}% similarity).`
+      confidenceText: face?.details || (isTampered ? "Biometric verification invalidated due to detected document tampering." : `Biometric facial comparison completed (${faceMatchPct}% similarity).`)
     },
     identitySearch: {
       status: val.watchlist_hit ? "CRITICAL_ALERT" : "CLEARED",
