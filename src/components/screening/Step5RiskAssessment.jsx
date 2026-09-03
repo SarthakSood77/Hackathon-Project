@@ -122,7 +122,7 @@ export const Step5RiskAssessment = () => {
       <div className="border-b border-[#d9e2ec] pb-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2">
-            <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-[#627d98]">SENTINEL AI</span>
+            <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-[#627d98]">IDShield AI</span>
             <span className="text-[11px] font-mono bg-[#edf4fb] text-[#1a56a4] font-bold px-2 py-0.5 rounded border border-[#1a56a4]/20">
               ID: {screeningId}
             </span>
@@ -274,7 +274,7 @@ export const Step5RiskAssessment = () => {
         </div>
       </div>
 
-      {/* Expandable Section: "Why did SENTINEL give this result?" */}
+      {/* Expandable Section: "Why did IDShield AI give this result?" */}
       <div className="bg-white border border-[#d9e2ec] rounded-2xl p-6 shadow-sm space-y-4">
         <button
           onClick={() => setExplanationOpen(!explanationOpen)}
@@ -282,7 +282,7 @@ export const Step5RiskAssessment = () => {
         >
           <div className="flex items-center gap-2">
             <Sparkles className="w-5 h-5 text-[#1a56a4]" />
-            <span>Why did SENTINEL give this result?</span>
+            <span>Why did IDShield AI give this result?</span>
           </div>
           {explanationOpen ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
         </button>
@@ -320,7 +320,7 @@ export const Step5RiskAssessment = () => {
       <div className="p-3 bg-[#f8fafc] border border-[#cbd7e6] rounded-xl text-[11px] font-mono text-[#627d98] flex items-center gap-2">
         <Info className="w-4 h-4 text-[#1a56a4] flex-shrink-0" />
         <span>
-          <strong>DECISION-SUPPORT NOTICE:</strong> SENTINEL AI is an automated screening assistant. Final border clearance, withholding, or enforcement decisions remain with authorized border officials.
+          <strong>DECISION-SUPPORT NOTICE:</strong> IDShield AI is an automated screening assistant. Final border clearance, withholding, or enforcement decisions remain with authorized border officials.
         </span>
       </div>
 

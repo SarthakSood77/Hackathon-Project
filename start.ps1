@@ -1,11 +1,11 @@
 # =====================================================
-# SENTINEL AI — Full Stack Startup Script
+# IDShield AI — Full Stack Startup Script
 # Run this from D:\Codes\Az in PowerShell
 # =====================================================
 
 Write-Host ""
 Write-Host "╔══════════════════════════════════════════════╗" -ForegroundColor Cyan
-Write-Host "║         SENTINEL AI — BORDER GUARD AI        ║" -ForegroundColor Cyan
+Write-Host "║        IDShield AI — BORDER GUARD AI         ║" -ForegroundColor Cyan
 Write-Host "║     AI-Powered Identity & Document Screening  ║" -ForegroundColor Cyan
 Write-Host "╚══════════════════════════════════════════════╝" -ForegroundColor Cyan
 Write-Host ""
@@ -25,7 +25,7 @@ Start-Sleep -Seconds 2
 
 # --- Open Browser ---
 Write-Host ""
-Write-Host "✅ Opening Sentinel AI in your browser..." -ForegroundColor Green
+Write-Host "✅ Opening IDShield AI in your browser..." -ForegroundColor Green
 Start-Process "http://localhost:5173"
 
 Write-Host ""

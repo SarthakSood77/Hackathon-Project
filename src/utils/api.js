@@ -1,5 +1,5 @@
 /**
- * BorderGuard AI / Sentinel AI - REST API Client
+ * BorderGuard AI / IDShield AI - REST API Client
  * Connects React Frontend to FastAPI Backend at http://localhost:8000
  */
 

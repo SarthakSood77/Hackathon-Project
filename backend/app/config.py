@@ -6,7 +6,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 class Settings(BaseSettings):
-    APP_NAME: str = "BorderGuard AI - Fake Identity & Document Screening System"
+    APP_NAME: str = "IDShield AI - Fake Identity & Document Screening System"
     VERSION: str = "1.0.0"
     DEBUG: bool = False
     ENVIRONMENT: str = "development"

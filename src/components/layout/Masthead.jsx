@@ -57,7 +57,7 @@ export const Masthead = () => {
             </p>
             <div className="flex items-baseline gap-2 flex-wrap">
               <h1 className="font-serif text-xl sm:text-2xl font-bold text-[#0B1F51] tracking-tight">
-                SENTINEL AI
+                IDShield AI
               </h1>
               <span className="bg-[#eef2f8] border border-[#c9d5e7] rounded px-2 py-0.5 text-xs font-mono font-semibold text-[#0B1F51]">
                 Bureau of Immigration · Portal Gateway

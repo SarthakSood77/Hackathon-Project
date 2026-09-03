@@ -53,7 +53,7 @@ export const Sidebar = () => {
           </div>
           <div>
             <div className="flex items-center gap-1.5">
-              <span className="text-base font-extrabold tracking-wider font-mono text-white">SENTINEL</span>
+              <span className="text-base font-extrabold tracking-wider font-mono text-white">IDShield</span>
               <span className="text-xs font-bold font-mono px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30">
                 AI
               </span>

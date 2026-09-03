@@ -1,4 +1,4 @@
-# SENTINEL AI — Border Guard AI System
+# IDShield AI — Border Guard AI System
 
 ## 📁 Project Structure
 

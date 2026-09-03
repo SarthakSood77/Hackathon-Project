@@ -24,7 +24,7 @@ export const ScreeningProgress = ({ progress }) => {
           <div className="w-12 h-12 rounded-full bg-[#edf4fb] text-[#0B1F51] flex items-center justify-center mx-auto shadow-inner">
             <ShieldCheck className="w-6 h-6 text-[#0B1F51] animate-pulse" />
           </div>
-          <p className="text-[11px] font-mono font-bold uppercase tracking-wider text-[#627d98]">SENTINEL AI ENGINE</p>
+          <p className="text-[11px] font-mono font-bold uppercase tracking-wider text-[#627d98]">IDShield AI ENGINE</p>
           <h2 className="font-serif text-2xl font-bold text-[#0B1F51]">AI SCREENING IN PROGRESS</h2>
           <p className="text-xs text-[#486581] font-sans">
             Processing identity credentials through multi-factor biometric & forensic verification pipeline.

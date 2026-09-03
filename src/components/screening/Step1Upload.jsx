@@ -113,7 +113,7 @@ export const Step1Upload = () => {
       {/* Header Banner */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 bg-[#edf4fb] border-l-4 border-[#1a56a4] text-[#0f3566] p-3.5 rounded-r-lg text-xs leading-relaxed font-sans">
         <div>
-          <strong>SENTINEL AI — Official Screening Directive:</strong> Upload the traveller's identity document and live selfie for autonomous 360-degree forensic & biometric screening.
+          <strong>IDShield AI — Official Screening Directive:</strong> Upload the traveller's identity document and live selfie for autonomous 360-degree forensic & biometric screening.
         </div>
         <div className="flex items-center gap-1.5 flex-shrink-0 font-mono text-[11px] font-bold px-2.5 py-1 rounded bg-white border border-[#1a56a4]/30 shadow-xs">
           {isBackendConnected ? (
@@ -185,7 +185,7 @@ export const Step1Upload = () => {
       {/* Main Page Title & Demo Scenarios */}
       <div className="border-b border-[#d9e2ec] pb-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <p className="text-[11px] font-mono font-bold uppercase tracking-wider text-[#627d98]">SENTINEL AI</p>
+          <p className="text-[11px] font-mono font-bold uppercase tracking-wider text-[#627d98]">IDShield AI</p>
           <h1 className="font-serif text-2xl sm:text-3xl font-bold text-[#0B1F51]">New Document Screening</h1>
           <p className="text-xs text-[#486581] font-sans mt-0.5">
             Upload custom synthetic files or click one of the pre-configured demo test cases below.
@@ -485,7 +485,7 @@ export const Step2OCR = () => {
 
         <div className="flex items-center gap-2 text-xs font-mono">
           <span className="px-3 py-1 rounded bg-[#edf4fb] border border-[#1a56a4]/30 text-[#0B1F51] font-semibold">
-            Engine: {currentScenario.isLiveResult ? "LIVE FASTAPI OCR ENGINE" : "SENTINEL-OCR v4.2"}
+            Engine: {currentScenario.isLiveResult ? "LIVE FASTAPI OCR ENGINE" : "IDSHIELD-OCR v4.2"}
           </span>
           <span className="px-3 py-1 rounded bg-[#eef7f2] border border-[#1e7e48]/30 text-[#1e7e48] font-bold">
             CONFIDENCE: {ocr.confidence}%

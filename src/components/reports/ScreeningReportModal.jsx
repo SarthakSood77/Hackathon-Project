@@ -88,7 +88,7 @@ export const ScreeningReportModal = () => {
                 </g>
               </svg>
               <div>
-                <h1 className="text-xl font-bold font-serif text-[#0B1F51]">SENTINEL AI · IMMIGRATION DOSSIER</h1>
+                <h1 className="text-xl font-bold font-serif text-[#0B1F51]">IDShield AI · IMMIGRATION DOSSIER</h1>
                 <p className="text-[11px] font-mono text-[#627d98] uppercase tracking-wider">
                   BUREAU OF IMMIGRATION · MINISTRY OF HOME AFFAIRS (DEMO)
                 </p>
@@ -239,7 +239,7 @@ export const ScreeningReportModal = () => {
               <span className="text-[9px] uppercase font-bold text-[#0B1F51] block tracking-widest">
                 DIGITALLY ATTESTED
               </span>
-              <span className="text-[10px] text-[#102a43] font-mono">SENTINEL-SIG-2026-9042</span>
+              <span className="text-[10px] text-[#102a43] font-mono">IDSHIELD-SIG-2026-9042</span>
             </div>
           </div>
         </div>
