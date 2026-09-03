@@ -57,23 +57,42 @@ export const DocumentCanvasOverlay = ({ scenario, isScanning = false, interactiv
         {/* Document Body Grid */}
         <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
           {/* Left: Photo Frame with Seal Stamp */}
-          <div className="md:col-span-4 flex flex-col items-center">
-            <div className="relative w-28 h-36 rounded border-2 border-amber-400/60 overflow-hidden bg-slate-950 shadow-md">
-              <img
-                src={person.avatarUrl}
-                alt={person.name}
-                className="w-full h-full object-cover grayscale contrast-125 brightness-90"
-              />
-              {/* Photo Security Grid */}
-              <div className="absolute inset-0 border border-amber-400/30 grid grid-cols-3 grid-rows-3 pointer-events-none"></div>
-              <div className="absolute bottom-1 right-1 px-1 rounded bg-[#0b172a] text-[8px] font-mono text-amber-300 font-bold border border-amber-500/40">
-                ICAO 9303
+          {(() => {
+            const isPhotoTampered = Boolean(
+              scenario.signals?.some(s => s.name.includes("Photo") && s.status !== "PASS") ||
+              scenario.ocr?.tamperingDetails?.toLowerCase().includes("photo") ||
+              scenario.ocr?.tamperingDetails?.toLowerCase().includes("splice")
+            );
+            return (
+              <div className="md:col-span-4 flex flex-col items-center">
+                <div className={`relative w-28 h-36 rounded border-2 overflow-hidden bg-slate-950 shadow-md ${
+                  isPhotoTampered ? "border-rose-500 shadow-[0_0_15px_rgba(239,68,68,0.5)] animate-pulse" : "border-amber-400/60"
+                }`}>
+                  <img
+                    src={person.avatarUrl}
+                    alt={person.name}
+                    className="w-full h-full object-cover grayscale contrast-125 brightness-90"
+                  />
+                  {/* Photo Security Grid */}
+                  <div className="absolute inset-0 border border-amber-400/30 grid grid-cols-3 grid-rows-3 pointer-events-none"></div>
+                  {isPhotoTampered ? (
+                    <div className="absolute top-1 left-1 px-1 rounded bg-rose-600 text-[8px] font-mono text-white font-bold border border-rose-300">
+                      PHOTO SEAM ALERT
+                    </div>
+                  ) : (
+                    <div className="absolute bottom-1 right-1 px-1 rounded bg-[#0b172a] text-[8px] font-mono text-amber-300 font-bold border border-amber-500/40">
+                      ICAO 9303
+                    </div>
+                  )}
+                </div>
+                <span className={`mt-2 text-[10px] font-mono uppercase tracking-wider font-semibold ${
+                  isPhotoTampered ? "text-rose-400 font-bold" : "text-slate-300"
+                }`}>
+                  {isPhotoTampered ? "⚠️ Photo Splice Suspected" : "Enrolled Biometric Photo"}
+                </span>
               </div>
-            </div>
-            <span className="mt-2 text-[10px] font-mono text-slate-300 uppercase tracking-wider font-semibold">
-              Enrolled Biometric Photo
-            </span>
-          </div>
+            );
+          })()}
 
           {/* Right: Data Fields */}
           <div className="md:col-span-8 grid grid-cols-2 gap-2.5 text-xs font-mono">
@@ -97,7 +116,16 @@ export const DocumentCanvasOverlay = ({ scenario, isScanning = false, interactiv
 
             {/* Field 4: Date of Birth */}
             {(() => {
-              const isDobTampered = isTampered && Boolean(person.originalDob || scenario.ocr?.highlightBox?.field?.includes("DOB"));
+              const isDobTampered = Boolean(
+                isTampered && (
+                  person.originalDob ||
+                  scenario.ocr?.highlightBox?.field?.toLowerCase().includes("dob") ||
+                  scenario.ocr?.highlightBox?.field?.toLowerCase().includes("birth") ||
+                  scenario.ocr?.tamperingDetails?.toLowerCase().includes("birth") ||
+                  scenario.ocr?.tamperingDetails?.toLowerCase().includes("dob") ||
+                  scenario.signals?.some(s => (s.name.includes("DOB") || s.name.includes("Birth")) && s.status !== "PASS")
+                )
+              );
               return (
                 <div
                   className={`p-1.5 rounded transition-all relative ${
@@ -127,9 +155,11 @@ export const DocumentCanvasOverlay = ({ scenario, isScanning = false, interactiv
                         <AlertTriangle className="w-3 h-3" />
                         <span>DATA INCONSISTENCY DETECTED</span>
                       </div>
-                      <div className="mt-0.5">
-                        Central Registry: <span className="font-mono font-bold text-emerald-300">{person.originalDob}</span>
-                      </div>
+                      {person.originalDob && (
+                        <div className="mt-0.5">
+                          Central Registry: <span className="font-mono font-bold text-emerald-300">{person.originalDob}</span>
+                        </div>
+                      )}
                       <div>
                         Physical Scanned: <span className="font-mono font-bold text-rose-300">{person.dob}</span>
                       </div>
@@ -140,10 +170,26 @@ export const DocumentCanvasOverlay = ({ scenario, isScanning = false, interactiv
             })()}
 
             {/* Field 5: Expiry Date */}
-            <div className="p-1.5 rounded bg-[#070e1b] border border-slate-700">
-              <span className="text-[9px] uppercase text-slate-400 block font-semibold">Expiry Date / समाप्ति तिथि</span>
-              <span className="font-semibold text-slate-200">{person.expiryDate}</span>
-            </div>
+            {(() => {
+              const isExpired = Boolean(
+                scenario.signals?.some(s => s.name.includes("Expiry") && s.status === "FAILED")
+              );
+              return (
+                <div className={`p-1.5 rounded transition-all relative ${
+                  isExpired ? "bg-rose-950/80 border-2 border-rose-500 shadow-[0_0_15px_rgba(239,68,68,0.4)]" : "bg-[#070e1b] border border-slate-700"
+                }`}>
+                  <div className="flex items-center justify-between">
+                    <span className="text-[9px] uppercase text-slate-400 block font-semibold">Expiry Date / समाप्ति तिथि</span>
+                    {isExpired && (
+                      <span className="text-[8px] font-bold px-1 rounded bg-rose-600 text-white">
+                        EXPIRED
+                      </span>
+                    )}
+                  </div>
+                  <span className={`font-semibold ${isExpired ? "text-rose-300 font-bold" : "text-slate-200"}`}>{person.expiryDate}</span>
+                </div>
+              );
+            })()}
 
             {/* Field 6: Issuing Authority */}
             <div className="col-span-2 p-1.5 rounded bg-[#070e1b] border border-slate-700">
@@ -154,13 +200,32 @@ export const DocumentCanvasOverlay = ({ scenario, isScanning = false, interactiv
         </div>
 
         {/* Machine Readable Zone (MRZ) */}
-        <div className="mt-4 pt-3 border-t border-slate-700 bg-[#050b14] rounded p-2.5 font-mono text-[11px] md:text-xs tracking-widest text-amber-300/90 leading-relaxed border border-slate-700">
-          <div className="text-[9px] uppercase text-slate-400 mb-1 font-sans">
-            Machine Readable Zone (ICAO DOC 9303 MRZ-TD3):
-          </div>
-          <div className="truncate">{person.mrzLine1}</div>
-          <div className="truncate">{person.mrzLine2}</div>
-        </div>
+        {(() => {
+          const isMrzTampered = Boolean(
+            scenario.signals?.some(s => s.name.includes("MRZ") && s.status === "FAILED") ||
+            scenario.ocr?.highlightBox?.field?.toLowerCase().includes("mrz")
+          );
+          return (
+            <div className={`mt-4 pt-3 border-t rounded p-2.5 font-mono text-[11px] md:text-xs tracking-widest leading-relaxed transition-all ${
+              isMrzTampered 
+                ? "bg-rose-950/70 border-2 border-rose-500 text-rose-300 shadow-[0_0_15px_rgba(239,68,68,0.3)]" 
+                : "bg-[#050b14] border border-slate-700 text-amber-300/90"
+            }`}>
+              <div className="flex items-center justify-between text-[9px] uppercase mb-1 font-sans">
+                <span className={isMrzTampered ? "text-rose-400 font-bold" : "text-slate-400"}>
+                  Machine Readable Zone (ICAO DOC 9303 MRZ-TD3):
+                </span>
+                {isMrzTampered && (
+                  <span className="px-1.5 py-0.5 rounded bg-rose-600 text-white font-mono font-bold text-[9px]">
+                    ✕ MODULO-10 CHECKSUM FAILED
+                  </span>
+                )}
+              </div>
+              <div className="truncate">{person.mrzLine1}</div>
+              <div className="truncate">{person.mrzLine2}</div>
+            </div>
+          );
+        })()}
       </div>
     </div>
   );

@@ -538,7 +538,14 @@ export const Step2OCR = () => {
                   <td className="p-3 text-right"><span className="text-[10px] bg-[#eef7f2] text-[#1e7e48] px-2 py-0.5 rounded font-bold">VALID</span></td>
                 </tr>
                 {(() => {
-                  const isDobAnomaly = Boolean(person.originalDob || ocr.highlightBox?.field?.includes("DOB"));
+                  const isDobAnomaly = Boolean(
+                    person.originalDob ||
+                    ocr.highlightBox?.field?.toLowerCase().includes("dob") ||
+                    ocr.highlightBox?.field?.toLowerCase().includes("birth") ||
+                    ocr.tamperingDetails?.toLowerCase().includes("birth") ||
+                    ocr.tamperingDetails?.toLowerCase().includes("dob") ||
+                    currentScenario.signals?.some(s => (s.name.includes("DOB") || s.name.includes("Birth")) && s.status !== "PASS")
+                  );
                   return (
                     <tr className={isDobAnomaly ? "bg-[#fdf0ee]" : ""}>
                       <td className="p-3 text-[#627d98] flex items-center gap-1">
@@ -549,7 +556,7 @@ export const Step2OCR = () => {
                         {person.dob}
                         {isDobAnomaly && (
                           <span className="block text-[10px] text-[#b3261e] font-sans mt-0.5 font-normal">
-                            ⚠️ Registry expects: {person.originalDob}
+                            ⚠️ {person.originalDob ? `Registry expects: ${person.originalDob}` : "Forensics detected unauthorized alteration in DOB zone"}
                           </span>
                         )}
                       </td>
@@ -557,7 +564,7 @@ export const Step2OCR = () => {
                       <td className="p-3 text-right">
                         {isDobAnomaly ? (
                           <span className="text-[10px] bg-[#fdf0ee] text-[#b3261e] border border-[#b3261e]/30 px-2 py-0.5 rounded font-bold">
-                            ANOMALY
+                            ALTERED
                           </span>
                         ) : (
                           <span className="text-[10px] bg-[#eef7f2] text-[#1e7e48] px-2 py-0.5 rounded font-bold">
@@ -574,27 +581,68 @@ export const Step2OCR = () => {
                   <td className="p-3 text-center text-[#1e7e48]">99.1%</td>
                   <td className="p-3 text-right"><span className="text-[10px] bg-[#eef7f2] text-[#1e7e48] px-2 py-0.5 rounded font-bold">VALID</span></td>
                 </tr>
-                <tr>
-                  <td className="p-3 text-[#627d98]">Expiry Date</td>
-                  <td className="p-3 font-semibold text-[#102a43]">{person.expiryDate}</td>
-                  <td className="p-3 text-center text-[#1e7e48]">98.7%</td>
-                  <td className="p-3 text-right"><span className="text-[10px] bg-[#eef7f2] text-[#1e7e48] px-2 py-0.5 rounded font-bold">VALID</span></td>
-                </tr>
+                {(() => {
+                  const isExpired = Boolean(
+                    currentScenario.signals?.some(s => s.name.includes("Expiry") && s.status === "FAILED")
+                  );
+                  return (
+                    <tr className={isExpired ? "bg-[#fdf0ee]" : ""}>
+                      <td className="p-3 text-[#627d98] flex items-center gap-1">
+                        <span>Expiry Date</span>
+                        {isExpired && <AlertTriangle className="w-3.5 h-3.5 text-[#b3261e]" />}
+                      </td>
+                      <td className="p-3 font-semibold text-[#102a43]">
+                        {person.expiryDate}
+                        {isExpired && (
+                          <span className="block text-[10px] text-[#b3261e] font-sans mt-0.5 font-normal">
+                            ✕ Credential validity has expired
+                          </span>
+                        )}
+                      </td>
+                      <td className="p-3 text-center text-[#1e7e48]">98.7%</td>
+                      <td className="p-3 text-right">
+                        {isExpired ? (
+                          <span className="text-[10px] bg-[#fdf0ee] text-[#b3261e] border border-[#b3261e]/30 px-2 py-0.5 rounded font-bold">
+                            EXPIRED
+                          </span>
+                        ) : (
+                          <span className="text-[10px] bg-[#eef7f2] text-[#1e7e48] px-2 py-0.5 rounded font-bold">
+                            VALID
+                          </span>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })()}
               </tbody>
             </table>
           </div>
 
           {/* MRZ Box */}
-          <div className="p-3.5 rounded-xl bg-[#f8fafc] border border-[#d9e2ec] font-mono text-xs space-y-1">
-            <div className="flex justify-between text-[10px] uppercase font-bold text-[#627d98]">
-              <span>ICAO DOC 9303 MRZ Checksum Verification:</span>
-              <span className="text-[#1e7e48]">✓ MODULO-10 EVALUATED</span>
-            </div>
-            <div className="bg-white p-2 rounded border border-[#d9e2ec] text-[#0B1F51] text-[11px] leading-tight">
-              <div>{person.mrzLine1}</div>
-              <div>{person.mrzLine2}</div>
-            </div>
-          </div>
+          {(() => {
+            const isMrzFailed = Boolean(
+              currentScenario.signals?.some(s => s.name.includes("MRZ") && s.status === "FAILED") ||
+              ocr.highlightBox?.field?.toLowerCase().includes("mrz")
+            );
+            return (
+              <div className={`p-3.5 rounded-xl border font-mono text-xs space-y-1 transition-all ${
+                isMrzFailed ? "bg-[#fdf0ee] border-[#b3261e]/40 text-[#6f130e]" : "bg-[#f8fafc] border-[#d9e2ec]"
+              }`}>
+                <div className="flex justify-between text-[10px] uppercase font-bold">
+                  <span className={isMrzFailed ? "text-[#b3261e]" : "text-[#627d98]"}>ICAO DOC 9303 MRZ Checksum Verification:</span>
+                  <span className={isMrzFailed ? "text-[#b3261e] font-bold" : "text-[#1e7e48]"}>
+                    {isMrzFailed ? "✕ MODULO-10 CHECKSUM MISMATCH" : "✓ MODULO-10 EVALUATED"}
+                  </span>
+                </div>
+                <div className={`p-2 rounded border text-[11px] leading-tight ${
+                  isMrzFailed ? "bg-white border-[#b3261e]/40 text-[#b3261e] font-bold" : "bg-white border-[#d9e2ec] text-[#0B1F51]"
+                }`}>
+                  <div>{person.mrzLine1}</div>
+                  <div>{person.mrzLine2}</div>
+                </div>
+              </div>
+            );
+          })()}
 
           {/* Buttons */}
           <div className="flex items-center justify-between pt-2">

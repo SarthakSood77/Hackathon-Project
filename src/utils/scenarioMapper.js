@@ -36,9 +36,32 @@ export function mapBackendDecisionToScenario(decision, customDocImageSrc = null,
   const mrz1 = rawLines[0] || (isUnverified ? "NO_VALID_MRZ_DETECTED<<<<<<<<<<<<<<<<<<<<<<<" : `P<${nat}${fullName.replace(/ /g, "<")}<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<`.slice(0, 44));
   const mrz2 = rawLines[1] || (isUnverified ? "UNVERIFIED_DATA_ZONE<<<<<<<<<<<<<<<<<<<<<<00" : `${docId.padEnd(9, "<")}0${nat}9001010M3001010<<<<<<<<<<<<<<00`.slice(0, 44));
 
-  const isTampered = Boolean(tamper.is_tampered && (tamper.tamper_risk_score >= 35));
+  const isTampered = Boolean(tamper.is_tampered || (tamper.tamper_risk_score >= 25));
   const isMatch = face ? face.verification_passed : true;
   const faceMatchPct = face ? Math.round(face.similarity_score * 100) : 95;
+
+  const rawAnomalies = tamper.detected_anomalies || [];
+  const riskFactors = decision.risk_factors || [];
+  const allAnomaliesText = [...rawAnomalies, ...riskFactors].join(" ");
+  
+  const isDobAnomaly = Boolean(
+    !val.dob_valid ||
+    allAnomaliesText.toLowerCase().includes("date of birth") ||
+    allAnomaliesText.toLowerCase().includes("birth") ||
+    allAnomaliesText.toLowerCase().includes("dob")
+  );
+  
+  const isPhotoAnomaly = Boolean(
+    tamper.visual_anomalies?.photo_splice_suspected ||
+    allAnomaliesText.toLowerCase().includes("photo") ||
+    allAnomaliesText.toLowerCase().includes("splice")
+  );
+
+  const isMrzAnomaly = Boolean(
+    val.mrz_checksum_passed === false ||
+    allAnomaliesText.toLowerCase().includes("checksum") ||
+    allAnomaliesText.toLowerCase().includes("mrz")
+  );
 
   let badge = "LOW RISK — VERIFIED";
   let badgeColor = "emerald";
@@ -55,12 +78,12 @@ export function mapBackendDecisionToScenario(decision, customDocImageSrc = null,
     badgeColor = "rose";
     riskLevel = "HIGH RISK";
     recommendation = "BIOMETRIC MISMATCH: DETENTION & ESCORT FOR FRAUD INVESTIGATION";
-  } else if (decision.status === "REJECTED_HIGH_RISK" || decision.risk_score >= 66) {
+  } else if (decision.status === "REJECTED_HIGH_RISK" || decision.risk_score >= 66 || val.watchlist_hit) {
     badge = "CRITICAL HIGH RISK — REJECTED";
     badgeColor = "rose";
     riskLevel = "HIGH RISK";
     recommendation = "ESCALATE TO AUTHORIZED OFFICER";
-  } else if (decision.status === "MANUAL_REVIEW" || decision.risk_score >= 26) {
+  } else if (decision.status === "MANUAL_REVIEW" || decision.risk_score >= 26 || isTampered || !val.mrz_checksum_passed || val.is_expired) {
     badge = "MEDIUM RISK — MANUAL REVIEW REQUIRED";
     badgeColor = "amber";
     riskLevel = "MANUAL REVIEW";
@@ -71,8 +94,10 @@ export function mapBackendDecisionToScenario(decision, customDocImageSrc = null,
   const signals = [];
   signals.push({
     name: "Document Authenticity",
-    status: isTampered ? "WARNING" : "PASS",
-    detail: isTampered ? "Localized recompression anomalies detected in optical template" : "Official standard travel credential format verified"
+    status: isTampered ? (tamper.tamper_risk_score >= 50 ? "FAILED" : "WARNING") : "PASS",
+    detail: isTampered 
+      ? (rawAnomalies[0] || `Localized forensic anomalies detected (Tamper Score: ${tamper.tamper_risk_score}/100)`) 
+      : "Official standard travel credential format verified"
   });
 
   signals.push({
@@ -87,6 +112,22 @@ export function mapBackendDecisionToScenario(decision, customDocImageSrc = null,
     detail: val.mrz_checksum_passed ? "Modulo-10 check digits verified on Document Number, DOB, and Expiry" : "Modulo-10 check digit mismatch on document numbers or DOB"
   });
 
+  if (isDobAnomaly) {
+    signals.push({
+      name: "Date of Birth Integrity",
+      status: "FAILED",
+      detail: "Visual forensics / MRZ indicates unauthorized date of birth modification"
+    });
+  }
+
+  if (isPhotoAnomaly) {
+    signals.push({
+      name: "Photo Splice Forensics",
+      status: "FAILED",
+      detail: "Discontinuous noise gradient across photo border indicates photo replacement"
+    });
+  }
+
   signals.push({
     name: "Document Expiry Period",
     status: val.is_expired ? "FAILED" : "PASS",
@@ -97,7 +138,7 @@ export function mapBackendDecisionToScenario(decision, customDocImageSrc = null,
     name: "Error Level Analysis (ELA)",
     status: isTampered ? (tamper.tamper_risk_score >= 50 ? "FAILED" : "WARNING") : "PASS",
     detail: isTampered
-      ? `Detected ${ela.hotspot_count || 1} localized recompression anomaly hotspot(s)`
+      ? `Detected ${ela.hotspot_count || 1} localized recompression anomaly hotspot(s) (Score: ${tamper.tamper_risk_score}/100)`
       : "Uniform compression gradient observed across all data zones"
   });
 
@@ -121,7 +162,7 @@ export function mapBackendDecisionToScenario(decision, customDocImageSrc = null,
   const watchlistPoints = val.watchlist_hit ? 20 : 0;
 
   const riskBreakdown = [
-    { name: "Document Tampering", value: tamperPoints, note: isTampered ? "ELA recompression hotspot" : "Uniform gradient" },
+    { name: "Document Tampering", value: tamperPoints, note: isTampered ? (rawAnomalies[0] || "ELA recompression hotspot") : "Uniform gradient" },
     { name: "Face Verification", value: facePoints, note: face ? `Concordance ${faceMatchPct}%` : "Not provided" },
     { name: "MRZ Validation", value: mrzPoints, note: val.mrz_checksum_passed ? "Modulo-10 valid" : "Checksum error" },
     { name: "Document Expiry", value: expiryPoints, note: val.is_expired ? "Expired credential" : "Active & valid" },
@@ -153,7 +194,8 @@ export function mapBackendDecisionToScenario(decision, customDocImageSrc = null,
   if (!isTampered) {
     aiExplanationPoints.push("✓ No significant tampering or ELA compression anomalies detected");
   } else {
-    aiExplanationPoints.push(`⚠ Error Level Analysis (ELA) detected localized pixel alterations (Tamper score: ${tamper.tamper_risk_score}/100)`);
+    const anomalySummary = rawAnomalies.length > 0 ? rawAnomalies.join(" ") : `Tamper risk score: ${tamper.tamper_risk_score}/100`;
+    aiExplanationPoints.push(`⚠ Forensics detected potential document alteration: ${anomalySummary}`);
   }
 
   if (!val.watchlist_hit) {
@@ -163,6 +205,23 @@ export function mapBackendDecisionToScenario(decision, customDocImageSrc = null,
   }
 
   const fullElaUrl = api.getElaImageUrl(ela.ela_image_url);
+
+  // Detailed combined tampering details
+  const fullTamperDetails = rawAnomalies.length > 0
+    ? `${tamper.forensic_summary || ''} [Anomalies: ${rawAnomalies.join(' • ')}]`.trim()
+    : (tamper.forensic_summary || "Document analysis completed.");
+
+  // Highlight Box configuration
+  let highlightBox = null;
+  if (isTampered || isDobAnomaly || isPhotoAnomaly || isMrzAnomaly) {
+    const highlightField = isDobAnomaly ? "Date of Birth (Altered)" : isPhotoAnomaly ? "Photo Area (Splice)" : isMrzAnomaly ? "MRZ Zone (Checksum Failure)" : "Document Forensics";
+    highlightBox = {
+      field: highlightField,
+      expected: isDobAnomaly ? "Registry Match" : "Pristine",
+      detected: rawAnomalies[0] || "Localized Discontinuity Detected",
+      status: `Tamper Score: ${tamper.tamper_risk_score}/100`
+    };
+  }
 
   return {
     id: `custom_${decision.screening_id}`,
@@ -179,6 +238,7 @@ export function mapBackendDecisionToScenario(decision, customDocImageSrc = null,
     person: {
       name: fullName,
       dob: dob,
+      originalDob: isDobAnomaly ? "01/01/2005" : null,
       nationality: `${nat} (${nat === "IND" ? "Republic of India" : nat})`,
       gender: passport.gender || "M",
       docId: docId,
@@ -197,13 +257,8 @@ export function mapBackendDecisionToScenario(decision, customDocImageSrc = null,
       securityFeaturesDetected: val.is_valid ? 10 : (isTampered ? 6 : 8),
       totalSecurityFeatures: 10,
       tamperingDetected: isTampered,
-      tamperingDetails: tamper.forensic_summary || "Document analysis completed.",
-      highlightBox: isTampered ? {
-        field: "Document Forensics",
-        expected: "Pristine",
-        detected: "Localized Anomalies",
-        status: `Tamper Score: ${tamper.tamper_risk_score}/100`
-      } : null
+      tamperingDetails: fullTamperDetails,
+      highlightBox
     },
     signals,
     biometrics: {
@@ -250,9 +305,10 @@ export function mapBackendDecisionToScenario(decision, customDocImageSrc = null,
     aiSummary: decision.risk_score < 26 
       ? "Low-risk document. No major anomalies were detected during automated screening. Standard border clearance authorized." 
       : decision.risk_score < 66 
-      ? "Potential anomalies detected in document forensics or biometric verification. Officer physical verification required before clearance." 
+      ? `Potential anomalies detected in document forensics (${rawAnomalies[0] || 'tampering flags'}) or validation rules. Officer physical verification required before clearance.` 
       : "Critical threat flags detected across document forensics, biometric matching, or watchlist registries. Escalate to authorized officer immediately.",
     recommendedAction: recommendation,
-    elaHeatmapUrl: fullElaUrl
+    elaHeatmapUrl: fullElaUrl,
+    detectedAnomalies: rawAnomalies
   };
 }

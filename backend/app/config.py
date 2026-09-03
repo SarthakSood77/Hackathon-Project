@@ -1,4 +1,6 @@
 from pathlib import Path
+import json
+from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -20,6 +22,20 @@ class Settings(BaseSettings):
     SECRET_KEY: str = "change-this-to-a-secure-random-key-in-production"
     ALLOWED_ORIGINS: list[str] = ["http://localhost:5173", "http://localhost:3000"]
     
+    @field_validator("ALLOWED_ORIGINS", mode="before")
+    @classmethod
+    def assemble_cors_origins(cls, v):
+        if isinstance(v, str):
+            if v.startswith("[") and v.endswith("]"):
+                try:
+                    return json.loads(v)
+                except Exception:
+                    pass
+            if "," in v:
+                return [i.strip() for i in v.split(",") if i.strip()]
+            return [v.strip()]
+        return v
+
     # Optional Gemini AI API Key for Deep Forensics & Visual Zero-Shot OCR
     GEMINI_API_KEY: str = ""
     

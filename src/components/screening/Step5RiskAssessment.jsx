@@ -33,6 +33,13 @@ export const Step5RiskAssessment = () => {
   const isSuspicious = !isHighRisk && risk >= 26;
   const screeningId = currentScenario.screeningId || "SEN-2026-000184";
 
+  const isPhotoTampered = Boolean(
+    currentScenario.signals?.some(s => s.name.includes("Photo") && s.status !== "PASS") ||
+    currentScenario.ocr?.tamperingDetails?.toLowerCase().includes("photo") ||
+    currentScenario.ocr?.tamperingDetails?.toLowerCase().includes("splice")
+  );
+  const isDocTampered = Boolean(currentScenario.ocr?.tamperingDetected);
+
   // Detailed individual checks
   const checksList = [
     {
@@ -41,7 +48,7 @@ export const Step5RiskAssessment = () => {
       color: currentScenario.ocr.tamperingDetected ? "text-[#b4690e]" : "text-[#1e7e48]",
       badge: currentScenario.ocr.tamperingDetected ? "⚠ WARNING" : "✓ PASSED",
       badgeType: currentScenario.ocr.tamperingDetected ? "suspicious" : "verified",
-      detail: currentScenario.ocr.tamperingDetected ? "Localized noise anomalies detected" : "Template structure verified"
+      detail: currentScenario.ocr.tamperingDetected ? (currentScenario.detectedAnomalies?.[0] || currentScenario.ocr.tamperingDetails || "Localized noise anomalies detected") : "Template structure verified"
     },
     {
       label: "OCR",
@@ -73,15 +80,15 @@ export const Step5RiskAssessment = () => {
       color: isHighRisk ? "text-[#b3261e]" : isSuspicious ? "text-[#b4690e]" : "text-[#1e7e48]",
       badge: currentScenario.ocr.tamperingDetected ? "⚠ TAMPER DETECTED" : "✓ LOW RISK",
       badgeType: currentScenario.ocr.tamperingDetected ? "highRisk" : "verified",
-      detail: currentScenario.ocr.tamperingDetected ? currentScenario.ocr.tamperingDetails : "Uniform ELA compression gradient"
+      detail: currentScenario.ocr.tamperingDetected ? (currentScenario.detectedAnomalies?.[0] || currentScenario.ocr.tamperingDetails || "Forensic alterations flagged") : "Uniform ELA compression gradient"
     },
     {
       label: "FACE VERIFICATION",
-      status: currentScenario.biometrics.faceMatch >= 80 ? "MATCH" : "MISMATCH",
-      color: currentScenario.biometrics.faceMatch >= 80 ? "text-[#1e7e48]" : "text-[#b3261e]",
-      badge: currentScenario.biometrics.faceMatch >= 80 ? `✓ MATCH ${currentScenario.biometrics.faceMatch}%` : `✕ MISMATCH ${currentScenario.biometrics.faceMatch}%`,
-      badgeType: currentScenario.biometrics.faceMatch >= 80 ? "verified" : "highRisk",
-      detail: `Facial concordance score: ${currentScenario.biometrics.faceMatch}%`
+      status: isPhotoTampered ? "COMPROMISED" : currentScenario.biometrics.faceMatch >= 80 ? (isDocTampered ? "MATCH (ALTERED)" : "MATCH") : "MISMATCH",
+      color: isPhotoTampered || currentScenario.biometrics.faceMatch < 80 ? "text-[#b3261e]" : isDocTampered ? "text-[#b4690e]" : "text-[#1e7e48]",
+      badge: isPhotoTampered ? "⚠️ COMPROMISED" : currentScenario.biometrics.faceMatch >= 80 ? (isDocTampered ? `✓ MATCH ${currentScenario.biometrics.faceMatch}% (ALTERED)` : `✓ MATCH ${currentScenario.biometrics.faceMatch}%`) : `✕ MISMATCH ${currentScenario.biometrics.faceMatch}%`,
+      badgeType: isPhotoTampered || currentScenario.biometrics.faceMatch < 80 ? "highRisk" : isDocTampered ? "suspicious" : "verified",
+      detail: isPhotoTampered ? "Reference photo altered; biometric confidence unreliable" : isDocTampered ? `Facial concordance ${currentScenario.biometrics.faceMatch}%, but document metadata tampered` : `Facial concordance score: ${currentScenario.biometrics.faceMatch}%`
     },
     {
       label: "WATCHLIST",
