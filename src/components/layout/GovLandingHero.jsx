@@ -87,7 +87,7 @@ export const GovLandingHero = () => {
               setScenario("scenarioA");
               startNewScreening("scenarioA");
             }}
-            className={`p-3.5 rounded-lg border text-left transition-all ${
+            className={`p-3.5 rounded-lg border text-left transition-all cursor-pointer ${
               selectedScenarioId === "scenarioA"
                 ? "bg-[#eef7f2] border-[#1e7e48] text-[#1e7e48] shadow-sm"
                 : "bg-[#f8fafc] border-[#d9e2ec] hover:border-[#0B1F51] text-[#102a43]"
@@ -95,10 +95,10 @@ export const GovLandingHero = () => {
           >
             <div className="flex items-center justify-between font-mono text-xs font-bold">
               <span>Scenario A: Verified Citizen</span>
-              <span className="px-2 py-0.5 rounded bg-[#1e7e48]/10 text-[#1e7e48]">08 / 100 Risk</span>
+              <span className="px-2 py-0.5 rounded bg-[#1e7e48]/10 text-[#1e7e48]">05 / 100 Risk</span>
             </div>
             <p className="text-xs font-sans text-[#486581] mt-1">
-              Rahul Sharma • Passport • 98% Face Match • SHA-256 Hash Matched
+              Parth Shandilya • Genuine DRM Passport • 94% Face Match • SHA-256 Ledger
             </p>
           </button>
 
@@ -107,18 +107,18 @@ export const GovLandingHero = () => {
               setScenario("scenarioB");
               startNewScreening("scenarioB");
             }}
-            className={`p-3.5 rounded-lg border text-left transition-all ${
+            className={`p-3.5 rounded-lg border text-left transition-all cursor-pointer ${
               selectedScenarioId === "scenarioB"
                 ? "bg-[#fdf8eb] border-[#b4690e] text-[#b4690e] shadow-sm"
                 : "bg-[#f8fafc] border-[#d9e2ec] hover:border-[#0B1F51] text-[#102a43]"
             }`}
           >
             <div className="flex items-center justify-between font-mono text-xs font-bold">
-              <span>Scenario B: Tampered DOB</span>
-              <span className="px-2 py-0.5 rounded bg-[#b4690e]/10 text-[#b4690e]">67 / 100 Risk</span>
+              <span>Scenario B: Tampered Credential</span>
+              <span className="px-2 py-0.5 rounded bg-[#b4690e]/10 text-[#b4690e]">82 / 100 Risk</span>
             </div>
             <p className="text-xs font-sans text-[#486581] mt-1">
-              Arjun Mehta • Passport • Scanned DOB 1995 vs Master 2002 Alteration
+              Parth Shandilya • Tampered DOB 2005-12-15 vs Registry 2005-01-01
             </p>
           </button>
 
@@ -127,18 +127,18 @@ export const GovLandingHero = () => {
               setScenario("scenarioC");
               startNewScreening("scenarioC");
             }}
-            className={`p-3.5 rounded-lg border text-left transition-all ${
+            className={`p-3.5 rounded-lg border text-left transition-all cursor-pointer ${
               selectedScenarioId === "scenarioC"
                 ? "bg-[#fdf0ee] border-[#b3261e] text-[#b3261e] shadow-sm"
                 : "bg-[#f8fafc] border-[#d9e2ec] hover:border-[#0B1F51] text-[#102a43]"
             }`}
           >
             <div className="flex items-center justify-between font-mono text-xs font-bold">
-              <span>Scenario C: Impersonation</span>
-              <span className="px-2 py-0.5 rounded bg-[#b3261e]/10 text-[#b3261e]">91 / 100 Risk</span>
+              <span>Scenario C: Biometric Impostor</span>
+              <span className="px-2 py-0.5 rounded bg-[#b3261e]/10 text-[#b3261e]">78 / 100 Risk</span>
             </div>
             <p className="text-xs font-sans text-[#486581] mt-1">
-              Aman Verma • Visa • 27% Face Match • Linked Alias Rahul Singh
+              Rohan Verma Credential • Live Impostor Face • 21% Biometric Mismatch
             </p>
           </button>
         </div>

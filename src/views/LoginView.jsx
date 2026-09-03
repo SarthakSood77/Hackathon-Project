@@ -375,26 +375,26 @@ export const DashboardView = () => {
   return (
     <div className="space-y-6">
       {/* Header with Government Title */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-3 border-b border-slate-700/80">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-3 border-b border-[#d9e2ec]">
         <div>
-          <div className="flex items-center gap-2 text-amber-400 text-xs font-mono font-bold uppercase">
-            <Award className="w-4 h-4" />
+          <div className="flex items-center gap-2 text-[#0B1F51] text-xs font-mono font-bold uppercase">
+            <Award className="w-4 h-4 text-[#C59B27]" />
             <span>Bureau of Immigration • Checkpoint Command Operations</span>
           </div>
-          <h1 className="text-2xl font-bold text-slate-100 font-mono tracking-tight mt-0.5">
-            Security Screening Dashboard
+          <h1 className="text-2xl font-bold text-[#0B1F51] font-serif tracking-tight mt-0.5">
+            Security Screening Operations Dashboard
           </h1>
-          <p className="text-xs text-slate-300 font-sans mt-0.5">
-            AI-assisted identity and document verification operations // Station Delhi Terminal 3 Gate 04
+          <p className="text-xs text-[#486581] font-sans mt-0.5">
+            AI-assisted identity and document verification operations // Station Delhi IGI Terminal 3 Gate 04
           </p>
         </div>
 
         <button
           onClick={() => startNewScreening()}
-          className="flex items-center gap-2 px-5 py-2.5 rounded bg-gradient-to-r from-blue-700 to-indigo-800 hover:from-blue-600 hover:to-indigo-700 border border-blue-400/40 text-white text-xs font-bold font-mono tracking-wider uppercase shadow-md transition-all"
+          className="flex items-center gap-2 px-5 py-2.5 rounded-lg bg-[#0B1F51] hover:bg-[#14317a] text-white text-xs font-bold font-sans tracking-wider uppercase shadow-md transition-all cursor-pointer"
         >
-          <Scan className="w-4 h-4" />
-          <span>Start New Screening</span>
+          <Scan className="w-4 h-4 text-[#C59B27]" />
+          <span>Start New Screening →</span>
         </button>
       </div>
 
@@ -440,29 +440,29 @@ export const DashboardView = () => {
       </div>
 
       {/* Live Screening Overview Section */}
-      <div className="bg-[#0b172a] border border-slate-700/80 rounded-xl overflow-hidden shadow-lg space-y-4 p-5">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-700/80 pb-4">
+      <div className="bg-white border border-[#d9e2ec] rounded-2xl overflow-hidden shadow-sm space-y-4 p-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#e4ebf5] pb-4">
           <div>
-            <h2 className="text-base font-bold text-slate-100 font-mono flex items-center gap-2">
-              <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
-              <span>Live Screening Overview</span>
+            <h2 className="text-base font-bold text-[#0B1F51] font-serif flex items-center gap-2">
+              <span className="w-2.5 h-2.5 rounded-full bg-[#1e7e48] animate-pulse"></span>
+              <span>Live Terminal Passenger Audit Feed</span>
             </h2>
-            <p className="text-xs text-slate-300 mt-0.5 font-sans">
+            <p className="text-xs text-[#486581] mt-0.5 font-sans">
               Real-time feed of traveler document verification queues and threat index determinations.
             </p>
           </div>
 
           {/* Status Filters */}
-          <div className="flex items-center gap-2">
-            <Filter className="w-3.5 h-3.5 text-slate-400" />
+          <div className="flex items-center gap-1.5 bg-[#f4f7fb] p-1 rounded-lg border border-[#d9e2ec]">
+            <Filter className="w-3.5 h-3.5 text-[#627d98] ml-1.5" />
             {["ALL", "VERIFIED", "SUSPICIOUS", "HIGH RISK"].map((st) => (
               <button
                 key={st}
                 onClick={() => setFilterStatus(st)}
-                className={`px-2.5 py-1 rounded text-[11px] font-mono font-semibold transition-all ${
+                className={`px-3 py-1 rounded text-[11px] font-mono font-semibold transition-all cursor-pointer ${
                   filterStatus === st
-                    ? "bg-amber-500/20 text-amber-300 border border-amber-500/40 font-bold"
-                    : "text-slate-400 hover:text-slate-200 border border-transparent"
+                    ? "bg-[#0B1F51] text-white font-bold shadow-xs"
+                    : "text-[#486581] hover:text-[#0B1F51] hover:bg-[#e4ebf5]"
                 }`}
               >
                 {st}
@@ -474,7 +474,7 @@ export const DashboardView = () => {
         {/* Table */}
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs font-mono">
-            <thead className="bg-[#070e1a] border-b border-slate-700 text-slate-300 uppercase text-[10px]">
+            <thead className="bg-[#edf4fb] border-b border-[#d9e2ec] text-[#0B1F51] uppercase text-[10px] font-bold">
               <tr>
                 <th className="p-3">Time</th>
                 <th className="p-3">Document ID</th>
@@ -486,7 +486,7 @@ export const DashboardView = () => {
                 <th className="p-3 text-right">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-700/60 text-slate-200">
+            <tbody className="divide-y divide-[#e4ebf5] text-[#102a43]">
               {filteredScreenings.map((row, idx) => {
                 const isHigh = row.status === "HIGH RISK";
                 const isSusp = row.status === "SUSPICIOUS";
@@ -495,7 +495,7 @@ export const DashboardView = () => {
                 return (
                   <tr
                     key={idx}
-                    className="hover:bg-[#0f2139] transition-colors group cursor-pointer"
+                    className="hover:bg-[#f4f7fb] transition-colors group cursor-pointer"
                     onClick={() => {
                       if (row.scenarioId) {
                         setScenario(row.scenarioId);
@@ -503,16 +503,16 @@ export const DashboardView = () => {
                       }
                     }}
                   >
-                    <td className="p-3 text-slate-400">{row.time}</td>
-                    <td className="p-3 font-bold text-amber-400">{row.docId}</td>
-                    <td className="p-3 font-semibold text-white group-hover:text-amber-300 transition-colors">
+                    <td className="p-3 text-[#627d98]">{row.time}</td>
+                    <td className="p-3 font-bold text-[#1a56a4]">{row.docId}</td>
+                    <td className="p-3 font-semibold text-[#102a43] group-hover:text-[#0B1F51] transition-colors">
                       {row.name}
                     </td>
-                    <td className="p-3 text-slate-300">{row.docType}</td>
+                    <td className="p-3 text-[#486581]">{row.docType}</td>
                     <td className="p-3 text-center">
                       <span
                         className={`font-bold ${
-                          row.faceMatch >= 80 ? "text-emerald-400" : row.faceMatch >= 50 ? "text-amber-400" : "text-rose-400"
+                          row.faceMatch >= 80 ? "text-[#1e7e48]" : row.faceMatch >= 50 ? "text-[#b4690e]" : "text-[#b3261e]"
                         }`}
                       >
                         {row.faceMatch}%
@@ -522,10 +522,10 @@ export const DashboardView = () => {
                       <span
                         className={`px-2 py-0.5 rounded text-[11px] font-bold ${
                           row.riskScore <= 20
-                            ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
+                            ? "bg-[#eef7f2] text-[#1e7e48] border border-[#1e7e48]/30"
                             : row.riskScore <= 70
-                            ? "bg-amber-500/10 text-amber-300 border border-amber-500/20"
-                            : "bg-rose-500/15 text-rose-400 border border-rose-500/20"
+                            ? "bg-[#fdf8eb] text-[#b4690e] border border-[#b4690e]/30"
+                            : "bg-[#fdf0ee] text-[#b3261e] border border-[#b3261e]/30"
                         }`}
                       >
                         {row.riskScore.toString().padStart(2, "0")}/100
@@ -547,7 +547,7 @@ export const DashboardView = () => {
                             startNewScreening("scenarioA");
                           }
                         }}
-                        className="p-1.5 rounded bg-[#132742] hover:bg-amber-500 hover:text-slate-950 text-slate-300 transition-all border border-slate-700"
+                        className="p-1.5 rounded-lg bg-[#edf4fb] hover:bg-[#0B1F51] hover:text-white text-[#0B1F51] transition-all border border-[#cbd7e6] cursor-pointer"
                         title="Inspect Screening Audit"
                       >
                         <ChevronRight className="w-3.5 h-3.5" />
