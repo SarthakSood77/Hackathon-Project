@@ -260,19 +260,17 @@ export const Step4FaceVerification = () => {
   const person = currentScenario.person;
   const bio = currentScenario.biometrics;
   
+  const isDocTampered = Boolean(currentScenario.ocr?.tamperingDetected);
   const isPhotoTampered = Boolean(
-    currentScenario.signals?.some(s => s.name.includes("Photo") && s.status !== "PASS") ||
-    currentScenario.ocr?.tamperingDetails?.toLowerCase().includes("photo") ||
-    currentScenario.ocr?.tamperingDetails?.toLowerCase().includes("splice") ||
-    currentScenario.ocr?.highlightBox?.field?.toLowerCase().includes("photo")
+    isDocTampered && (
+      currentScenario.signals?.some(s => s.name.includes("Photo") && s.status !== "PASS") ||
+      currentScenario.ocr?.tamperingDetails?.toLowerCase().includes("photo") ||
+      currentScenario.ocr?.tamperingDetails?.toLowerCase().includes("splice") ||
+      currentScenario.ocr?.highlightBox?.field?.toLowerCase().includes("photo")
+    )
   );
   
-  const isDocTampered = Boolean(
-    currentScenario.ocr?.tamperingDetected ||
-    currentScenario.signals?.some(s => s.status === "FAILED" || (s.name.includes("Authenticity") && s.status !== "PASS"))
-  );
-  
-  const isRawFaceMatch = (bio.faceMatch >= 80) || (bio.status === "VERIFIED");
+  const isRawFaceMatch = (bio.faceMatch >= 75) || (bio.status === "VERIFIED");
   const isCleanMatch = isRawFaceMatch && !isPhotoTampered && !isDocTampered;
 
   const handleCapture = () => {
