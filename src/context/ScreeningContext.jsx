@@ -411,8 +411,6 @@ export const ScreeningProvider = ({ children }) => {
         manualReviewModalOpen,
         setManualReviewModalOpen,
         isProcessingStep,
-        isCameraActive,
-        setIsCameraActive,
         searchQuery,
         setSearchQuery,
         isBackendConnected,
