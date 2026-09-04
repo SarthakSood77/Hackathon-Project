@@ -20,21 +20,31 @@ class Settings(BaseSettings):
     
     # Security & CORS
     SECRET_KEY: str = "change-this-to-a-secure-random-key-in-production"
-    ALLOWED_ORIGINS: list[str] = ["http://localhost:5173", "http://localhost:3000"]
+    ALLOWED_ORIGINS: list[str] = ["*"]
     
     @field_validator("ALLOWED_ORIGINS", mode="before")
     @classmethod
     def assemble_cors_origins(cls, v):
-        if isinstance(v, str):
-            if v.startswith("[") and v.endswith("]"):
-                try:
-                    return json.loads(v)
-                except Exception:
-                    pass
-            if "," in v:
-                return [i.strip() for i in v.split(",") if i.strip()]
-            return [v.strip()]
-        return v
+        try:
+            if isinstance(v, list):
+                return v
+            if isinstance(v, str):
+                v = v.strip()
+                if not v:
+                    return ["*"]
+                if v.startswith("[") and v.endswith("]"):
+                    try:
+                        return json.loads(v)
+                    except Exception:
+                        pass
+                if "," in v:
+                    return [i.strip() for i in v.split(",") if i.strip()]
+                return [v.strip()]
+            if isinstance(v, tuple):
+                return list(v)
+        except Exception:
+            pass
+        return ["*"]
 
     # Optional Gemini AI API Key for Deep Forensics & Visual Zero-Shot OCR
     GEMINI_API_KEY: str = ""
