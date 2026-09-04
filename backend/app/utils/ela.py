@@ -63,12 +63,12 @@ def perform_error_level_analysis(
     
     # Spliced regions exhibit compression error significantly higher than background average
     # Threshold for localized hotspots: mean + 2.5 * std (and above an absolute error threshold)
-    hotspot_threshold = max(mean_val + 2.5 * std_val, 45.0)
+    hotspot_threshold = max(mean_val + 3.0 * std_val, 55.0)
     _, hotspot_mask = cv2.threshold(diff_gray, hotspot_threshold, 255, cv2.THRESH_BINARY)
     
     # Find contours of anomalous clusters
     contours, _ = cv2.findContours(hotspot_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-    significant_hotspots = [c for c in contours if cv2.contourArea(c) > 150]
+    significant_hotspots = [c for c in contours if cv2.contourArea(c) > 300]
     hotspot_count = len(significant_hotspots)
     
     # 6. Compute Normalized Anomaly Score (0 - 100)

@@ -88,7 +88,7 @@ class TamperingService:
             # If the photo noise variance deviates drastically from the background document noise
             if noise_var > 0:
                 noise_ratio = abs(face_noise - noise_var) / (noise_var + 1e-5)
-                if noise_ratio > 3.5:
+                if noise_ratio > 5.0:
                     photo_splice_suspected = True
                     splice_confidence = min(0.95, round(noise_ratio / 5.0, 2))
                     anomalies.append(f"Photo area exhibits anomalous noise variance ratio ({noise_ratio:.2f}x vs document background), indicating photo replacement/splice.")
@@ -142,7 +142,7 @@ class TamperingService:
         if tamper_score >= 45.0 or meta_raw.get("is_suspicious_software"):
             severity = TamperSeverity.HIGH
             is_tampered = True
-        elif tamper_score >= 25.0 or photo_splice_suspected:
+        elif tamper_score >= 25.0 and photo_splice_suspected:
             severity = TamperSeverity.SUSPICIOUS
             is_tampered = True
         else:
