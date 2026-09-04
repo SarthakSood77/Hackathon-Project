@@ -1,6 +1,5 @@
 from pathlib import Path
 import json
-from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -18,33 +17,9 @@ class Settings(BaseSettings):
     MONGODB_URL: str = "mongodb://localhost:27017"
     MONGODB_DB_NAME: str = "border_guard_db"
     
-    # Security & CORS
+    # Security & CORS — stored as str to avoid pydantic-settings json.loads crash
     SECRET_KEY: str = "change-this-to-a-secure-random-key-in-production"
-    ALLOWED_ORIGINS: list[str] = ["*"]
-    
-    @field_validator("ALLOWED_ORIGINS", mode="before")
-    @classmethod
-    def assemble_cors_origins(cls, v):
-        try:
-            if isinstance(v, list):
-                return v
-            if isinstance(v, str):
-                v = v.strip()
-                if not v:
-                    return ["*"]
-                if v.startswith("[") and v.endswith("]"):
-                    try:
-                        return json.loads(v)
-                    except Exception:
-                        pass
-                if "," in v:
-                    return [i.strip() for i in v.split(",") if i.strip()]
-                return [v.strip()]
-            if isinstance(v, tuple):
-                return list(v)
-        except Exception:
-            pass
-        return ["*"]
+    ALLOWED_ORIGINS_RAW: str = "*"
 
     # Optional Gemini AI API Key for Deep Forensics & Visual Zero-Shot OCR
     GEMINI_API_KEY: str = ""
@@ -70,6 +45,20 @@ class Settings(BaseSettings):
     WEIGHT_EXPIRY_DATE: float = 0.15
 
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
+
+    @property
+    def ALLOWED_ORIGINS(self) -> list[str]:
+        raw = self.ALLOWED_ORIGINS_RAW.strip()
+        if not raw or raw == "*":
+            return ["*"]
+        if raw.startswith("[") and raw.endswith("]"):
+            try:
+                return json.loads(raw)
+            except Exception:
+                pass
+        if "," in raw:
+            return [i.strip() for i in raw.split(",") if i.strip()]
+        return [raw]
 
 settings = Settings()
 
