@@ -85,13 +85,14 @@ class TamperingService:
         
         if face_found and face_crop is not None:
             face_noise = calculate_noise_variance(face_crop)
-            # Skip photo splice check for very clean / synthetic documents
-            # (demo templates have near-zero background noise, inflating the ratio)
-            if noise_var > 80 and face_noise > 0:
+            # Skip photo splice check for clean/synthetic documents
+            # Real tampered scans have high overall noise (noise_var > 200)
+            # Synthetic templates + real photos have moderate noise but high face_noise
+            if noise_var > 200 and face_noise > 0:
                 noise_ratio = abs(face_noise - noise_var) / (noise_var + 1e-5)
-                if noise_ratio > 5.0:
+                if noise_ratio > 8.0:
                     photo_splice_suspected = True
-                    splice_confidence = min(0.95, round(noise_ratio / 5.0, 2))
+                    splice_confidence = min(0.95, round(noise_ratio / 10.0, 2))
                     anomalies.append(f"Photo area exhibits anomalous noise variance ratio ({noise_ratio:.2f}x vs document background), indicating photo replacement/splice.")
                     evidence_tags.append("PHOTO_REPLACEMENT_SUSPECTED")
                     visual_desc.append("High noise variance difference across photo border.")
