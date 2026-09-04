@@ -1,6 +1,6 @@
 # IDShield AI — Border Guard AI System
 
-https://hackathon-project-nqzv0o60x-gg-91c2.vercel.app/
+https://hackathon-project-gg-91c2.vercel.app/?_vercel_share=DJ67drdCvPvVaCpYRqYMk4vDZUgNdqba
 
 ## 📁 Project Structure
 
