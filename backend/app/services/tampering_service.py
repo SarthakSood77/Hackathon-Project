@@ -85,8 +85,9 @@ class TamperingService:
         
         if face_found and face_crop is not None:
             face_noise = calculate_noise_variance(face_crop)
-            # If the photo noise variance deviates drastically from the background document noise
-            if noise_var > 0:
+            # Skip photo splice check for very clean / synthetic documents
+            # (demo templates have near-zero background noise, inflating the ratio)
+            if noise_var > 80 and face_noise > 0:
                 noise_ratio = abs(face_noise - noise_var) / (noise_var + 1e-5)
                 if noise_ratio > 5.0:
                     photo_splice_suspected = True
