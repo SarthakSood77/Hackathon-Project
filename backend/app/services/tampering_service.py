@@ -140,11 +140,11 @@ class TamperingService:
             
         tamper_score = min(100.0, max(0.0, round(tamper_score, 1)))
         
-        # Determine Severity
-        if tamper_score >= 45.0 or meta_raw.get("is_suspicious_software"):
+        # Determine Severity — raise threshold so synthetic composites don't flag
+        if tamper_score >= 60.0 or meta_raw.get("is_suspicious_software"):
             severity = TamperSeverity.HIGH
             is_tampered = True
-        elif tamper_score >= 25.0 and photo_splice_suspected:
+        elif tamper_score >= 40.0 and photo_splice_suspected:
             severity = TamperSeverity.SUSPICIOUS
             is_tampered = True
         else:
